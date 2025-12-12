@@ -101,15 +101,14 @@ const Sidebar = () => {
         ))}
       </Nav>
       <div 
-        style={{ padding: '0 20px' }} // <-- Tambahkan padding horizontal yang sama
-        className="mt-auto mb-3" // <-- mt-auto mendorong ke bawah. mb-3 memberi sedikit margin bawah.
+        style={{ padding: '0 20px' }}
+        className="mt-auto mb-3"
       >
         {/* Item Pengaturan */}
         <Nav.Link 
             as={Link} 
             to={settingsItem.to} 
             key={settingsItem.to}
-            // Pertahankan semua kelas gaya agar sama persis
             className={`d-flex align-items-center mb-2 p-3 rounded text-white ${isActive(settingsItem.to) ? 'bg-white fw-bold' : 'text-white'}`}
             style={{ 
                 backgroundColor: isActive(settingsItem.to) ? 'white' : 'transparent',

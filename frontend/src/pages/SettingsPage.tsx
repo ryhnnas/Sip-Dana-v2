@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
-import { GearFill, PersonFill, EnvelopeFill, KeyFill, CheckCircleFill } from 'react-bootstrap-icons';
+import { GearFill, PersonFill, EnvelopeFill, KeyFill, CheckCircleFill, BoxArrowRight } from 'react-bootstrap-icons';
 import { useAuth } from '../context/AuthContext';
-// --- PERBAIKAN IMPORT TIPE DATA MENGGUNAKAN NAMESPACE ---
 import * as AuthTypes from '../types/auth.types'; 
-// --------------------------------------------------------
 import { updateProfileService, updatePasswordService } from '../services/user.service';
 
 const SettingsPage = () => {
-    const { user, setUser } = useAuth();
+    const { user, setUser, handleLogout } = useAuth();
     
     // State untuk Form Profil
-    const [profileData, setProfileData] = useState<AuthTypes.ProfileUpdateInput>({ // <-- Menggunakan AuthTypes
+    const [profileData, setProfileData] = useState<AuthTypes.ProfileUpdateInput>({
         username: user?.username || '',
         email: user?.email || '',
     });
@@ -20,7 +18,7 @@ const SettingsPage = () => {
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
     // State untuk Form Password
-    const [passwordData, setPasswordData] = useState<AuthTypes.PasswordUpdateInput>({ // <-- Menggunakan AuthTypes
+    const [passwordData, setPasswordData] = useState<AuthTypes.PasswordUpdateInput>({
         currentPassword: '',
         newPassword: '',
     });
@@ -43,7 +41,6 @@ const SettingsPage = () => {
             
             // Update Context dan Local Storage jika berhasil
             if (user) {
-                // Pastikan kita hanya update jika ada perubahan (logika sederhana)
                 const updatedUser = { 
                     ...user, 
                     username: profileData.username || user.username, 
@@ -181,6 +178,29 @@ const SettingsPage = () => {
                                     </Button>
                                 </div>
                             </Form>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                {/* 3. Tombol Logout (Col lg=12 atau Col lg=6) */}
+                <Col lg={6} className="mb-4">
+                    <Card className="shadow-sm border-0">
+                        <Card.Body className="text-center">
+                            <h4 className="mb-3 text-danger d-flex align-items-center justify-content-center">
+                                <BoxArrowRight className="me-2" /> Keluar Akun
+                            </h4>
+                            <p className="text-muted mb-3">
+                                Pastikan Anda menyimpan semua perubahan sebelum keluar. Anda akan diarahkan ke halaman login.
+                            </p>
+                            <div className="d-grid">
+                                <Button 
+                                    variant="danger" 
+                                    onClick={handleLogout}
+                                    className="fw-bold d-flex align-items-center justify-content-center"
+                                >
+                                    <BoxArrowRight size={20} className="me-2" /> Keluar Sekarang
+                                </Button>
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>
