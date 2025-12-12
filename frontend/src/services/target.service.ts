@@ -1,0 +1,19 @@
+import api from './api';
+// FIX: Menggunakan Namespace Import
+import * as TargetTypes from '../types/target.types'; 
+
+/**
+ * [GET] Mengambil semua target menabung aktif.
+ */
+export const fetchActiveTargets = async (): Promise<TargetTypes.TargetMenabung[]> => {
+    const response = await api.get<{ message: string, data: TargetTypes.TargetMenabung[] }>('/targets');
+    return response.data.data;
+};
+
+/**
+ * [POST] Membuat target menabung baru.
+ */
+export const createNewTarget = async (data: TargetTypes.TargetInput) => {
+    const response = await api.post('/targets', data);
+    return response.data;
+};
