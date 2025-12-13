@@ -5,9 +5,13 @@ import { GearFill, PersonFill, EnvelopeFill, KeyFill, CheckCircleFill, BoxArrowR
 import { useAuth } from '../context/AuthContext';
 import * as AuthTypes from '../types/auth.types'; 
 import { updateProfileService, updatePasswordService } from '../services/user.service';
+import TransactionModal from '../components/TransactionModal'; // TAMBAH INI
 
 const SettingsPage = () => {
     const { user, setUser, handleLogout } = useAuth();
+    
+    // TAMBAH STATE UNTUK MODAL
+    const [showModal, setShowModal] = useState(false);
     
     // State untuk Form Profil
     const [profileData, setProfileData] = useState<AuthTypes.ProfileUpdateInput>({
@@ -25,6 +29,12 @@ const SettingsPage = () => {
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
+    // TAMBAH HANDLER UNTUK MODAL
+    const handleModalSuccess = () => {
+        setShowModal(false);
+        // Tidak perlu reload data di SettingsPage
+    };
+
     // --- Handlers Profil ---
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProfileData({ ...profileData, [e.target.name]: e.target.value });
@@ -39,7 +49,6 @@ const SettingsPage = () => {
         try {
             const { message } = await updateProfileService(profileData);
             
-            // Update Context dan Local Storage jika berhasil
             if (user) {
                 const updatedUser = { 
                     ...user, 
@@ -80,7 +89,6 @@ const SettingsPage = () => {
             const { message } = await updatePasswordService(passwordData);
             
             setPasswordMessage({ type: 'success', text: message });
-            // Reset fields
             setPasswordData({ currentPassword: '', newPassword: '' });
         } catch (error: any) {
             const msg = error.response?.data?.message || 'Gagal update password. Pastikan password lama benar.';
@@ -92,7 +100,10 @@ const SettingsPage = () => {
 
 
     return (
-        <MainLayout>
+        <MainLayout 
+            onTransactionAdded={handleModalSuccess} 
+            openTransactionModal={() => setShowModal(true)}
+        >
             
             <h2 className="mb-4 d-flex align-items-center text-primary">
                 <GearFill size={28} className="me-2" /> Pengaturan Akun
@@ -182,7 +193,7 @@ const SettingsPage = () => {
                     </Card>
                 </Col>
 
-                {/* 3. Tombol Logout (Col lg=12 atau Col lg=6) */}
+                {/* 3. Tombol Logout */}
                 <Col lg={6} className="mb-4">
                     <Card className="shadow-sm border-0">
                         <Card.Body className="text-center">
@@ -205,6 +216,13 @@ const SettingsPage = () => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* TAMBAH MODAL */}
+            <TransactionModal 
+                show={showModal} 
+                handleClose={() => setShowModal(false)} 
+                onSuccess={handleModalSuccess} 
+            />
 
         </MainLayout>
     );

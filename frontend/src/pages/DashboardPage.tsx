@@ -21,17 +21,14 @@ const DashboardPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false); 
     
-    // FUNGSINYA HARUS BERUBAH MENJADI SEPERTI INI DI SEMUA FILE TERKAIT
     const formatRupiah = (amount: number) => {
-        // Math.floor memastikan tidak ada angka desimal
         const formatted = new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
-            minimumFractionDigits: 0, // FIX: Menghapus angka desimal
+            minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(Math.floor(amount));
         
-        // Kadang hasilnya Rpxxxxx, kita pastikan ada spasi setelah Rp
         return formatted.replace('Rp', 'Rp ');
     };
 
@@ -75,7 +72,7 @@ const DashboardPage = () => {
 
     if (loading) {
         return (
-            <MainLayout>
+            <MainLayout hideAddButton={true}>
                 <div className="d-flex justify-content-center mt-5">
                     <Spinner animation="border" variant="primary" />
                     <span className="ms-3">Memuat data Dashboard...</span>
@@ -86,7 +83,7 @@ const DashboardPage = () => {
     
     if (error) {
         return (
-            <MainLayout>
+            <MainLayout hideAddButton={true}>
                 <Alert variant="danger" className="mt-5">{error}</Alert>
             </MainLayout>
         );
@@ -95,7 +92,8 @@ const DashboardPage = () => {
     return (
         <MainLayout 
             onTransactionAdded={handleModalSuccess} 
-            openTransactionModal={() => setShowModal(true)} 
+            openTransactionModal={() => setShowModal(true)}
+            hideAddButton={true} // TAMBAHKAN PROP INI untuk hide button di TransactionHistory
         >
             
             <h2 className="mb-4 d-flex align-items-center text-primary">
@@ -111,7 +109,6 @@ const DashboardPage = () => {
                             <Card className="shadow-sm border-0 h-100 p-4">
                                 <h5 className="text-muted">Total Saldo Saat Ini</h5>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    {/* FIX: Mengurangi ukuran font agar tidak terlalu besar/tabrakan */}
                                     <h3 className="fw-bold text-primary mb-0">{formatRupiah(totalSaldo)}</h3>
                                     <EyeFill size={20} className="text-muted" style={{ cursor: 'pointer' }} />
                                 </div>
@@ -141,7 +138,7 @@ const DashboardPage = () => {
                         </Col>
                     </Row>
 
-                    {/* Tombol Tambah Transaksi (Full-width) */}
+                    {/* Tombol Tambah Transaksi (Full-width) - TETAP DI DASHBOARD */}
                     <div className="d-grid mb-5">
                         <Button 
                             variant="primary" 
@@ -149,7 +146,7 @@ const DashboardPage = () => {
                             className="py-3 fw-bold shadow"
                             onClick={() => setShowModal(true)} 
                         >
-                            <PlusCircle size={24} className="me-2" /> + Tambah Transaksi
+                            <PlusCircle size={24} className="me-2" /> Tambah Transaksi
                         </Button>
                     </div>
                     

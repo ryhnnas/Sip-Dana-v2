@@ -7,10 +7,14 @@ import type * as ReportTypes from '../types/report.types';
 import MonthlyBarChart from '../components/MonthlyBarChart'; 
 import { useAuth } from '../context/AuthContext'; 
 import { useTimeFilter } from '../hooks/useTimeFilter'; 
+import TransactionModal from '../components/TransactionModal'; // TAMBAH INI
 
 const AnalisisPage = () => {
     const { user } = useAuth();
     const { unit, period, navigate, changeUnit } = useTimeFilter('bulan'); 
+    
+    // TAMBAH STATE UNTUK MODAL
+    const [showModal, setShowModal] = useState(false);
     
     const [report, setReport] = useState<ReportTypes.AnalysisReport | null>(null);
     const [historicalData, setHistoricalData] = useState<ReportTypes.AnalysisReport['chartData']>([]);
@@ -52,14 +56,22 @@ const AnalisisPage = () => {
         loadAnalysisData();
     }, [loadAnalysisData]);
 
+    // TAMBAH HANDLER UNTUK MODAL
+    const handleModalSuccess = () => {
+        setShowModal(false);
+        loadAnalysisData(); // Reload data setelah tambah transaksi
+    };
+
     const handleFilterChange = (newUnit: string) => {
         changeUnit(newUnit as 'mingguan' | 'bulan' | 'tahunan');
     };
     
-    // Tampilan Loading/Error
     if (loading) {
         return (
-            <MainLayout>
+            <MainLayout 
+                onTransactionAdded={handleModalSuccess} 
+                openTransactionModal={() => setShowModal(true)}
+            >
                 <div className="d-flex justify-content-center mt-5">
                     <Spinner animation="border" variant="primary" />
                     <span className="ms-3">Memuat laporan analisis...</span>
@@ -70,13 +82,15 @@ const AnalisisPage = () => {
 
     if (error) {
          return (
-            <MainLayout>
+            <MainLayout 
+                onTransactionAdded={handleModalSuccess} 
+                openTransactionModal={() => setShowModal(true)}
+            >
                 <Alert variant="danger" className="mt-5">{error}</Alert>
             </MainLayout>
         );
     }
     
-    // Data Report
     const totalPemasukan = report?.summary?.totalPemasukan || 0;
     const totalPengeluaran = report?.summary?.totalPengeluaran || 0;
     const totalSelisih = report?.summary?.neto || 0;
@@ -87,17 +101,17 @@ const AnalisisPage = () => {
     const persentasePerubahan = 5.89;
 
     return (
-        <MainLayout>
+        <MainLayout 
+            onTransactionAdded={handleModalSuccess} 
+            openTransactionModal={() => setShowModal(true)}
+        >
             
-            {/* Header dan Filter Navigasi */}
             <h2 className="mb-4 d-flex align-items-center text-primary">
                 <BarChartFill size={28} className="me-2" /> Analisis Keuangan
             </h2>
 
-            {/* Filter Navigasi dan Navigasi Bulan/Tahun */}
             <div className="d-flex mb-4 align-items-center">
                 
-                {/* Tombol Filter Unit */}
                 <ButtonGroup className="me-4">
                     <Button 
                         variant={unit === 'mingguan' ? 'primary' : 'outline-secondary'} 
@@ -113,7 +127,6 @@ const AnalisisPage = () => {
                     >Tahunan</Button>
                 </ButtonGroup>
                 
-                {/* Navigasi Periode */}
                 <div className="d-flex align-items-center">
                     <Button variant="outline-secondary" size="sm" onClick={() => navigate('prev')} disabled={loading} className="me-2">
                         <ArrowLeftShort size={18} />
@@ -127,14 +140,11 @@ const AnalisisPage = () => {
                 </div>
             </div>
             
-            {/* Baris 1: Ringkasan Angka (Pemasukan, Pengeluaran, Selisih) */}
             <Row className="mb-4">
                 
-                {/* Total Pemasukan */}
                 <Col md={4} className="mb-3">
                     <Card className="shadow-sm border-0 h-100 p-3" style={{ borderLeft: '5px solid green' }}>
                         <h5 className="fw-bold mb-1 text-uppercase small" style={{ color: 'green' }}>Total Pemasukan</h5>
-                        {/* FIX: Mengubah h2 menjadi h3 */}
                         <h3 className="fw-bold text-success mb-0">{formatRupiah(totalPemasukan)}</h3>
                         <small className="text-success d-flex align-items-center">
                             <ArrowUpShort size={16} /> +{persentasePerubahan}% dari bulan lalu
@@ -142,11 +152,9 @@ const AnalisisPage = () => {
                     </Card>
                 </Col>
 
-                {/* Total Pengeluaran */}
                 <Col md={4} className="mb-3">
                     <Card className="shadow-sm border-0 h-100 p-3" style={{ borderLeft: '5px solid red' }}>
                         <h5 className="fw-bold mb-1 text-uppercase small" style={{ color: 'red' }}>Total Pengeluaran</h5>
-                        {/* FIX: Mengubah h2 menjadi h3 */}
                         <h3 className="fw-bold text-danger mb-0">{formatRupiah(totalPengeluaran)}</h3>
                         <small className="text-danger d-flex align-items-center">
                             <ArrowDownShort size={16} /> +{persentasePerubahan}% dari bulan lalu
@@ -154,11 +162,9 @@ const AnalisisPage = () => {
                     </Card>
                 </Col>
                 
-                {/* Total Selisih / Neto */}
                 <Col md={4} className="mb-3">
                     <Card className="shadow-sm border-0 h-100 p-3">
                         <h5 className="fw-bold mb-1 text-uppercase small text-secondary">Total Selisih</h5>
-                        {/* FIX: Mengubah h2 menjadi h3 */}
                         <h3 className="fw-bold mb-2" style={{ color: isSurplus ? '#007bff' : 'red' }}>
                             {formatRupiah(totalSelisih)}
                         </h3>
@@ -180,7 +186,6 @@ const AnalisisPage = () => {
                 </Col>
             </Row>
 
-            {/* Baris 2: Grafik Keuangan */}
             <Card className="shadow-sm border-0 p-4 mb-5">
                 <h4 className="mb-3">Grafik Keuangan</h4>
                 {historicalData.length > 0 ? (
@@ -192,7 +197,6 @@ const AnalisisPage = () => {
                 )}
             </Card>
 
-            {/* Baris 3: Metode Mengelola Keuangan (Rekomendasi) */}
             <Card className="shadow-sm border-0 p-4 mb-5" style={{ backgroundColor: '#e6f7ff' }}>
                 <h4 className="mb-4 text-primary">Metode Mengelola Keuangan</h4>
                 
@@ -226,6 +230,13 @@ const AnalisisPage = () => {
                      <p className="text-muted">Tidak ada rekomendasi metode yang tersedia saat ini.</p>
                 )}
             </Card>
+
+            {/* TAMBAH MODAL */}
+            <TransactionModal 
+                show={showModal} 
+                handleClose={() => setShowModal(false)} 
+                onSuccess={handleModalSuccess} 
+            />
 
         </MainLayout>
     );

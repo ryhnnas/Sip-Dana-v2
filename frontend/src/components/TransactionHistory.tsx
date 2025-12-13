@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, ListGroup, Badge, Spinner, Alert } from 'react-bootstrap';
-import { Calendar, ArrowLeftShort, ArrowRightShort, PlusCircle } from 'react-bootstrap-icons'; 
+import { Calendar, ArrowLeftShort, ArrowRightShort, PlusCircle, FileText } from 'react-bootstrap-icons'; 
 import { fetchTransactionHistory, fetchMonthlySummary } from '../services/report.service';
 import type { TransactionHistoryItem, MonthlySummary } from '../types/report.types';
 import { useTimeFilter } from '../hooks/useTimeFilter'; 
@@ -8,6 +8,7 @@ import { useTimeFilter } from '../hooks/useTimeFilter';
 interface TransactionHistoryProps {
     onTransactionAdded: () => void; 
     openTransactionModal: () => void;
+    hideAddButton?: boolean; // Tambah prop optional untuk hide button
 }
 
 // Fungsi format Rupiah bersih (tanpa ,00)
@@ -17,11 +18,11 @@ const formatRupiah = (amount: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0, 
         maximumFractionDigits: 0
-    }).format(Math.floor(amount));
-    return formatted.replace('Rp', 'Rp ');
+    }).format(amount);
+    return formatted.replace('Rp', 'Rp. ');
 };
 
-const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAdded, openTransactionModal }) => {
+const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAdded, openTransactionModal, hideAddButton = false }) => {
     const { unit, period, navigate, changeUnit } = useTimeFilter('bulan'); 
     
     const [transactions, setTransactions] = useState<TransactionHistoryItem[]>([]);
@@ -33,9 +34,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
     const loadHistoryData = useCallback(async () => {
         setLoading(true);
         try {
-            // ASUMSI FIX: Mengirim seluruh objek period.apiParam untuk memfilter data
-            // Anda harus memastikan fetchTransactionHistory dan fetchMonthlySummary 
-            // di report.service.ts dapat menerima {month}, {year}, atau {start_date, end_date}
             const history = await fetchTransactionHistory(period.apiParam); 
             const monthlySummary = await fetchMonthlySummary(period.apiParam); 
             
@@ -48,7 +46,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
         } finally {
             setLoading(false);
         }
-    }, [period.apiParam]); // <-- Dependency ini yang memastikan data refresh saat tanggal/unit berubah
+    }, [period.apiParam]);
 
     useEffect(() => {
         loadHistoryData();
@@ -62,22 +60,16 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
     const hasNoData = transactions.length === 0 && totalNeto === 0;
 
     return (
-        <div style={{ backgroundColor: '#eef7ff', minHeight: '100vh', padding: '20px' }}>
+        <div style={{ backgroundColor: '#e3f2fd', minHeight: '100vh', padding: '20px' }}>
             
-            {/* Box Ringkasan Bulan */}
-            <Card className="mb-4 shadow-sm border-0">
-                <Card.Body>
-                    {/* Header Navigasi Bulan */}
+            {/* Box Ringkasan dengan desain baru */}
+            <Card className="mb-4 shadow-sm border-0" style={{ borderRadius: '20px', overflow: 'hidden' }}>
+                <Card.Body className="p-4">
+                    {/* Header dengan icon mata */}
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <Button variant="outline-primary" size="sm" onClick={() => navigate('prev')} disabled={loading}>
-                            <ArrowLeftShort size={18} />
-                        </Button>
-                        <h6 className="mb-0 text-primary d-flex align-items-center fw-bold">
-                            <Calendar size={18} className="me-2" />
-                            {period.display}
-                        </h6>
-                        <Button variant="outline-primary" size="sm" onClick={() => navigate('next')} disabled={loading}>
-                            <ArrowRightShort size={18} />
+                        <h5 className="mb-0 fw-bold">{period.display}</h5>
+                        <Button variant="link" className="p-0 text-secondary">
+                            <i className="bi bi-eye" style={{ fontSize: '20px' }}></i>
                         </Button>
                     </div>
                     
@@ -88,59 +80,151 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
                         <Alert variant="warning" className="small">{error}</Alert>
                     ) : (
                         <>
-                            <div className="d-flex justify-content-between mb-2 small">
-                                <small className="text-muted">Pemasukan</small>
-                                <Badge bg="success">{formatRupiah(totalPemasukan)}</Badge>
+                            <div className="d-flex justify-content-between mb-2">
+                                <span style={{ fontSize: '14px' }}>Pemasukan</span>
+                                <span className="fw-bold" style={{ color: '#4caf50', fontSize: '14px' }}>
+                                    {formatRupiah(totalPemasukan)}
+                                </span>
                             </div>
-                            <div className="d-flex justify-content-between mb-2 small">
-                                <small className="text-muted">Pengeluaran</small>
-                                <Badge bg="danger">{formatRupiah(totalPengeluaran)}</Badge>
+                            <div className="d-flex justify-content-between mb-2">
+                                <span style={{ fontSize: '14px' }}>Pengeluaran</span>
+                                <span className="fw-bold" style={{ color: '#f44336', fontSize: '14px' }}>
+                                    {formatRupiah(totalPengeluaran)}
+                                </span>
                             </div>
                             
                             <hr className="my-2" />
-                            <div className="d-flex justify-content-between fw-bold small">
-                                <small>Total Neto</small>
-                                <small style={{ color: totalNeto >= 0 ? 'green' : 'red' }}>{formatRupiah(totalNeto)}</small>
+                            <div className="d-flex justify-content-between">
+                                <span className="fw-bold" style={{ fontSize: '14px' }}>Total</span>
+                                <span className="fw-bold" style={{ 
+                                    color: totalNeto >= 0 ? '#4caf50' : '#f44336',
+                                    fontSize: '16px' 
+                                }}>
+                                    {totalNeto >= 0 ? '+' : ''}{formatRupiah(totalNeto)}
+                                </span>
                             </div>
                         </>
                     )}
 
-                    {/* Filter Unit */}
-                    <div className="d-flex justify-content-around mt-3">
-                        <Button variant={unit === 'mingguan' ? 'primary' : 'outline-secondary'} size="sm" onClick={() => changeUnit('mingguan')}>Minggu</Button>
-                        <Button variant={unit === 'bulan' ? 'primary' : 'outline-secondary'} size="sm" onClick={() => changeUnit('bulan')}>Bulan</Button>
-                        <Button variant={unit === 'tahunan' ? 'primary' : 'outline-secondary'} size="sm" onClick={() => changeUnit('tahunan')}>Tahun</Button>
+                    {/* Filter Unit dengan design pill */}
+                    <div className="d-flex gap-2 mt-3">
+                        <Button 
+                            variant={unit === 'mingguan' ? 'primary' : 'light'} 
+                            size="sm" 
+                            onClick={() => changeUnit('mingguan')}
+                            style={{ 
+                                borderRadius: '20px', 
+                                flex: 1,
+                                backgroundColor: unit === 'mingguan' ? '#2196f3' : '#fff',
+                                color: unit === 'mingguan' ? '#fff' : '#666',
+                                border: 'none',
+                                fontWeight: 500
+                            }}
+                        >
+                            Minggu
+                        </Button>
+                        <Button 
+                            variant={unit === 'bulan' ? 'primary' : 'light'} 
+                            size="sm" 
+                            onClick={() => changeUnit('bulan')}
+                            style={{ 
+                                borderRadius: '20px', 
+                                flex: 1,
+                                backgroundColor: unit === 'bulan' ? '#2196f3' : '#fff',
+                                color: unit === 'bulan' ? '#fff' : '#666',
+                                border: 'none',
+                                fontWeight: 500
+                            }}
+                        >
+                            Bulan
+                        </Button>
+                        <Button 
+                            variant={unit === 'tahunan' ? 'primary' : 'light'} 
+                            size="sm" 
+                            onClick={() => changeUnit('tahunan')}
+                            style={{ 
+                                borderRadius: '20px', 
+                                flex: 1,
+                                backgroundColor: unit === 'tahunan' ? '#2196f3' : '#fff',
+                                color: unit === 'tahunan' ? '#fff' : '#666',
+                                border: 'none',
+                                fontWeight: 500
+                            }}
+                        >
+                            Tahun
+                        </Button>
                     </div>
                 </Card.Body>
             </Card>
 
-            {/* Riwayat Transaksi */}
-            <h6 className="mb-3 fw-bold">Riwayat Transaksi (Terbaru)</h6>
+            {/* Header Riwayat Transaksi */}
+            <h5 className="mb-3 fw-bold text-center">Riwayat Transaksi</h5>
             
+            {/* List Transaksi */}
             {hasNoData ? (
-                <div className="text-center p-4 text-muted small">
+                <div className="text-center p-4 text-muted">
                     <p className="mb-0">Belum ada transaksi tercatat pada periode ini.</p>
                 </div>
             ) : (
-                <ListGroup variant="flush">
+                <div className="mb-5">
                     {transactions.map((tx) => (
-                        <ListGroup.Item 
+                        <Card 
                             key={tx.id_transaksi} 
-                            className="d-flex justify-content-between align-items-center border-0 p-3 mb-2 rounded shadow-sm"
-                            style={{ backgroundColor: 'white' }}
+                            className="mb-3 shadow-sm border-0"
+                            style={{ borderRadius: '15px' }}
                         >
-                            <div>
-                                <div className="fw-bold small">{tx.keterangan}</div>
-                                <small className="text-muted">{new Date(tx.tanggal).toLocaleDateString('id-ID')}</small>
-                            </div>
-                            <div className={tx.jenis === 'pemasukan' ? 'text-success fw-bold small' : 'text-danger fw-bold small'}>
-                                {tx.jenis === 'pemasukan' ? '+' : '-'} {formatRupiah(tx.jumlah)}
-                            </div>
-                        </ListGroup.Item>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center">
+                                    {/* Keterangan dan Tanggal */}
+                                    <div className="flex-grow-1">
+                                        <div className="fw-bold" style={{ fontSize: '15px' }}>
+                                            {tx.keterangan}
+                                        </div>
+                                        <small className="text-muted" style={{ fontSize: '12px' }}>
+                                            {new Date(tx.tanggal).toLocaleDateString('id-ID', { 
+                                                day: '2-digit', 
+                                                month: 'long', 
+                                                year: 'numeric',
+                                            })}
+                                        </small>
+                                    </div>
+                                    
+                                    {/* Jumlah */}
+                                    <div 
+                                        className="fw-bold" 
+                                        style={{ 
+                                            color: tx.jenis === 'pemasukan' ? '#4caf50' : '#f44336',
+                                            fontSize: '15px'
+                                        }}
+                                    >
+                                        {formatRupiah(tx.jumlah)}
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
                     ))}
-                </ListGroup>
+                </div>
             )}
             
+            {/* Tombol Tambah Transaksi - Setelah list */}
+            {!hideAddButton && (
+                <div className="mt-4 pb-4">
+                    <Button 
+                        variant="primary" 
+                        className="w-100 py-3 fw-bold shadow-lg"
+                        style={{ 
+                            borderRadius: '30px',
+                            backgroundColor: '#2196f3',
+                            border: 'none',
+                            fontSize: '16px'
+                        }}
+                        onClick={openTransactionModal}
+                    >
+                        <PlusCircle size={20} className="me-2" />
+                        Tambah Transaksi
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };

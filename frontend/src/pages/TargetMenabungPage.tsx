@@ -7,9 +7,8 @@ import * as TargetTypes from '../types/target.types';
 import { useAuth } from '../context/AuthContext'; 
 import { fetchMonthlySummary } from '../services/report.service';
 import type * as ReportTypes from '../types/report.types'; 
-import type { HTMLSelectElement, HTMLTextAreaElement } from 'react';
+import TransactionModal from '../components/TransactionModal'; // TAMBAH INI
 
-// FIX: Fungsi format Rupiah bersih (tanpa ,00)
 const formatRupiah = (amount: number) => {
     const formatted = new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -28,13 +27,12 @@ interface TargetModalProps {
     onSuccess: () => void;
 }
 
-// FIX: Menggunakan string untuk target_jumlah
 type MaskedTargetInput = Omit<TargetTypes.TargetInput, 'target_jumlah'> & { target_jumlah: string };
 
 const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess }) => {
     const [formData, setFormData] = useState<MaskedTargetInput>({
         nama_target: '',
-        target_jumlah: '', // <-- String untuk masking
+        target_jumlah: '',
         tanggal_target: new Date().toISOString().substring(0, 10),
     });
     const [loading, setLoading] = useState(false);
@@ -44,7 +42,6 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
         const { name, value } = e.target;
         
         if (name === 'target_jumlah') {
-            // Logika Masking Input Ribuan
             const cleanValue = value.replace(/\D/g, ''); 
             const numberValue = parseInt(cleanValue) || 0;
             const maskedValue = numberValue.toLocaleString('id-ID'); 
@@ -58,7 +55,6 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // FIX: Konversi Jumlah Masked (string) ke number sebelum dikirim ke API
         const numericTarget = parseFloat(formData.target_jumlah.replace(/\./g, '').replace(/,/g, ''));
 
         if (numericTarget <= 0) {
@@ -70,7 +66,7 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
         try {
             const dataToSend: TargetTypes.TargetInput = {
                 ...formData,
-                target_jumlah: numericTarget, // <-- Kirim sebagai number
+                target_jumlah: numericTarget,
             };
 
             await createNewTarget(dataToSend);
@@ -112,9 +108,9 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
                     <Form.Group className="mb-3" controlId="formTargetJumlah">
                         <Form.Label>Target Jumlah (Rp)</Form.Label>
                         <Form.Control
-                            type="text" // <-- FIX: type="text"
+                            type="text"
                             name="target_jumlah"
-                            value={formData.target_jumlah} // <-- Menampilkan string masked
+                            value={formData.target_jumlah}
                             onChange={handleChange}
                             required
                             inputMode="numeric"
@@ -197,6 +193,9 @@ const TargetMenabungPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     
+    // TAMBAH STATE UNTUK TRANSACTION MODAL
+    const [showTransactionModal, setShowTransactionModal] = useState(false);
+    
     const loadTargets = useCallback(async () => {
         setLoading(true);
         try {
@@ -224,11 +223,20 @@ const TargetMenabungPage = () => {
         loadTargets(); 
     };
     
+    // TAMBAH HANDLER UNTUK TRANSACTION MODAL
+    const handleTransactionSuccess = () => {
+        setShowTransactionModal(false);
+        loadTargets(); // Reload data setelah tambah transaksi
+    };
+    
     const totalSaldo = summary?.saldoAkhir || 0;
     const uangBisaDitabung = totalSaldo * 0.2; 
 
     return (
-        <MainLayout>
+        <MainLayout 
+            onTransactionAdded={handleTransactionSuccess} 
+            openTransactionModal={() => setShowTransactionModal(true)}
+        >
             <h2 className="mb-4 d-flex align-items-center text-primary">
                 <Bullseye size={28} className="me-2" /> Target Menabung
             </h2>
@@ -248,9 +256,7 @@ const TargetMenabungPage = () => {
                 <Alert variant="danger">{error}</Alert>
             ) : (
                 <>
-                    {/* Baris Ringkasan Saldo dan Uang Ditabung */}
                     <Row className="mb-5">
-                        {/* 1. Kotak Total Saldo */}
                         <Col md={6} className="mb-3">
                             <Card className="shadow-sm border-0 h-100 p-4">
                                 <h5 className="text-muted">Total Saldo</h5>
@@ -261,7 +267,6 @@ const TargetMenabungPage = () => {
                             </Card>
                         </Col>
 
-                        {/* 2. Kotak Uang Bisa Ditabung */}
                         <Col md={6} className="mb-3">
                             <Card className="shadow-sm border-0 h-100 p-4">
                                 <h5 className="text-muted">Uang yang Disarankan Ditabung</h5>
@@ -273,7 +278,6 @@ const TargetMenabungPage = () => {
                         </Col>
                     </Row>
                     
-                    {/* Daftar Target Aktif */}
                     <h4 className="mb-3">Daftar Target Aktif ({targets.length})</h4>
                     
                     {targets.length === 0 ? (
@@ -293,10 +297,18 @@ const TargetMenabungPage = () => {
                 </>
             )}
 
+            {/* Modal Target */}
             <TargetModal 
                 show={showModal} 
                 handleClose={() => setShowModal(false)} 
                 onSuccess={handleTargetCreated}
+            />
+
+            {/* TAMBAH TRANSACTION MODAL */}
+            <TransactionModal 
+                show={showTransactionModal} 
+                handleClose={() => setShowTransactionModal(false)} 
+                onSuccess={handleTransactionSuccess} 
             />
 
         </MainLayout>

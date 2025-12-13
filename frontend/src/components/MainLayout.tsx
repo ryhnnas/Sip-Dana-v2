@@ -8,9 +8,15 @@ interface MainLayoutProps {
     // Props baru untuk interaksi modal transaksi
     onTransactionAdded?: () => void;
     openTransactionModal?: () => void;
+    hideAddButton?: boolean; // TAMBAH PROP INI
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, onTransactionAdded, openTransactionModal }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ 
+    children, 
+    onTransactionAdded, 
+    openTransactionModal,
+    hideAddButton = false // DEFAULT false agar button muncul di halaman lain
+}) => {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
             
@@ -32,10 +38,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onTransactionAdded, o
                     <TransactionHistory 
                         onTransactionAdded={onTransactionAdded!}
                         openTransactionModal={openTransactionModal!}
+                        hideAddButton={hideAddButton} // TERUSKAN PROP INI
                     />
                 </div>
             </div>
-
         </div>
     );
 };

@@ -19,7 +19,7 @@ const buildTimeFilter = (req: AuthRequest): { clause: string, values: (string | 
 
     // 1. Filter Mingguan/Custom Date Range
     if (start_date && end_date) {
-        clause = 'AND tanggal BETWEEN ? AND ?';
+        clause = 'AND DATE(tanggal) BETWEEN ? AND ?'; 
         values.push(start_date as string, end_date as string);
     } 
     // 2. Filter Bulanan
