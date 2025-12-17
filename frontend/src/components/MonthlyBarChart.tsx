@@ -11,7 +11,6 @@ import {
 } from 'chart.js';
 import type { AnalysisReport } from '../types/report.types';
 
-// Wajib daftarkan komponen Chart.js yang akan digunakan
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -22,29 +21,25 @@ ChartJS.register(
 );
 
 interface MonthlyBarChartProps {
-    // Data untuk 6 bulan terakhir
-    chartData: AnalysisReport['chartData']; 
+    chartData: any[]; // Diubah ke any agar lebih fleksibel menerima properti 'label'
 }
 
-// Konfigurasi opsi chart (untuk tampilan yang bersih)
 const options = {
   responsive: true,
-  maintainAspectRatio: false, // Penting untuk mengontrol tinggi chart
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top' as const,
     },
     title: {
       display: true,
-      text: 'Tren Pemasukan vs Pengeluaran (6 Bulan Terakhir)',
+      text: 'Tren Keuangan (Pemasukan vs Pengeluaran)',
     },
     tooltip: {
       callbacks: {
         label: function(context: any) {
           let label = context.dataset.label || '';
-          if (label) {
-            label += ': ';
-          }
+          if (label) { label += ': '; }
           if (context.parsed.y !== null) {
             label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(context.parsed.y);
           }
@@ -56,7 +51,6 @@ const options = {
   scales: {
     y: {
       beginAtZero: true,
-      // Format label sumbu Y menjadi Rupiah
       ticks: {
         callback: function(value: any) {
           return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
@@ -68,8 +62,8 @@ const options = {
 
 const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ chartData }) => {
     
-    // Siapkan data untuk Chart.js
-    const labels = chartData.map(d => d.month); // Misal: Mei, Jun, Jul, ...
+    // FIX: Menggunakan 'label' (bukan 'month') agar cocok dengan data dari Backend
+    const labels = chartData.map(d => d.label || d.month); 
 
     const data = {
         labels,
@@ -77,13 +71,13 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ chartData }) => {
             {
                 label: 'Pemasukan',
                 data: chartData.map(d => d.pemasukan),
-                backgroundColor: 'rgba(75, 192, 192, 0.8)', // Hijau/Biru
+                backgroundColor: 'rgba(75, 192, 192, 0.8)',
                 borderRadius: 4,
             },
             {
                 label: 'Pengeluaran',
                 data: chartData.map(d => d.pengeluaran),
-                backgroundColor: 'rgba(255, 99, 132, 0.8)', // Merah
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
                 borderRadius: 4,
             },
         ],
@@ -91,7 +85,6 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ chartData }) => {
 
     return (
         <div style={{ height: '350px' }}>
-            {/* Chart.js akan di-render di sini */}
             <Bar options={options} data={data} /> 
         </div>
     );

@@ -24,8 +24,7 @@ const StartPage = () => {
       
       {/* 1. Logo di Kiri Atas (Posisi Absolute) */}
       <div style={{ position: 'absolute', top: '30px', left: '30px' }} className="d-flex align-items-center">
-          <img src={SipDanaLogo} alt="SipDana Logo" style={{ height: '35px' }} className="me-2" />
-          <h4 className="text-primary mb-0 fw-bold">SipDana</h4>
+          <img src={SipDanaLogo} alt="SipDana Logo" style={{ height: '60px' }} className="me-2" />
       </div>
 
       <Container fluid className="my-auto">
@@ -50,12 +49,12 @@ const StartPage = () => {
                     <div className="d-grid gap-3 mt-5" style={{ maxWidth: '250px' }}>
                         <Link to="/login">
                             <Button variant="primary" size="lg" className="px-5 py-2 fw-bold" style={{ borderRadius: '50px' }}>
-                                Masuk (Login)
+                                Login
                             </Button>
                         </Link>
                         <Link to="/register">
                             <Button variant="outline-primary" size="lg" className="px-5 py-2 fw-bold" style={{ borderRadius: '50px' }}>
-                                Daftar (Register)
+                                Register
                             </Button>
                         </Link>
                     </div>

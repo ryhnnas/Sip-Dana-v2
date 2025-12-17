@@ -1,121 +1,123 @@
 import { Response } from 'express';
 import pool from '../config/db.config';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { TargetInput, TargetMenabung } from '../types/target.types';
-import { OkPacket, RowDataPacket } from 'mysql2';
-
-// Tipe data untuk parameter route, yang berisi id_target
-interface TargetParams {
-    id_target: string;
-}
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 /**
- * [POST] Membuat Target Menabung Baru
- * Endpoint: POST /api/targets
- */
-export const createTarget = async (req: AuthRequest<{}, {}, TargetInput>, res: Response) => {
-    const userId = req.user?.id_user;
-    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
-
-    const { nama_target, target_jumlah, tanggal_target } = req.body;
-
-    if (!nama_target || !target_jumlah || !tanggal_target) {
-        return res.status(400).json({ message: 'Semua field wajib diisi.' });
-    }
-
-    try {
-        const query = `
-            INSERT INTO targetmenabung 
-            (id_user, nama_target, target_jumlah, tanggal_target) 
-            VALUES (?, ?, ?, ?)
-        `;
-        const [result] = await pool.query<OkPacket>(query, [
-            userId, nama_target, target_jumlah, tanggal_target
-        ]);
-
-        res.status(201).json({ 
-            message: 'Target menabung berhasil dibuat.', 
-            id_target: result.insertId 
-        });
-
-    } catch (error) {
-        console.error('Error saat membuat target:', error);
-        res.status(500).json({ message: 'Gagal membuat target menabung.' });
-    }
-};
-
-/**
- * [GET] Mengambil Semua Target Menabung Aktif
- * Endpoint: GET /api/targets
+ * [GET] Mengambil semua target menabung user yang aktif
  */
 export const getActiveTargets = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id_user;
-    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
-
+    
     try {
-        const [rows] = await pool.query<TargetMenabung & RowDataPacket[]>(
-            `
-            SELECT * FROM targetmenabung 
-            WHERE id_user = ? AND status = 'aktif'
-            ORDER BY tanggal_target ASC
-            `,
+        const [rows] = await pool.query<RowDataPacket[]>(
+            'SELECT id_target, id_user, nama_target, target_jumlah, jumlah_terkumpul, tanggal_target, status FROM targetmenabung WHERE id_user = ? ORDER BY created_at DESC',
             [userId]
         );
-
-        res.status(200).json({
-            message: 'Daftar target aktif berhasil diambil.',
-            data: rows
-        });
-    } catch (error) {
-        console.error('Error saat mengambil target:', error);
-        res.status(500).json({ message: 'Gagal mengambil daftar target menabung.' });
+        res.status(200).json({ data: rows });
+    } catch (error: any) {
+        console.error('ERROR DATABASE (getActiveTargets):', error.message);
+        res.status(500).json({ message: 'Gagal mengambil data target.' });
     }
 };
 
 /**
- * [PUT] Menambahkan dana ke target (Kontribusi)
- * Endpoint: PUT /api/targets/contribute/:id_target
+ * [POST] Membuat target menabung baru
  */
-export const contributeToTarget = async (req: AuthRequest<TargetParams, {}, { amount: number }>, res: Response) => {
+export const createTarget = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id_user;
-    
-    // FIX: Destructure dengan tipe yang sudah didefinisikan
-    const { id_target } = req.params; 
-    const { amount } = req.body;
-
-    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
-    
-    // Konversi id_target dari string (params) ke integer
-    const targetId = parseInt(id_target);
-    if (isNaN(targetId) || !amount || amount <= 0) {
-        return res.status(400).json({ message: 'ID target tidak valid atau jumlah kontribusi harus positif.' });
-    }
-
+    const { nama_target, target_jumlah, tanggal_target } = req.body;
 
     try {
-        await pool.query('START TRANSACTION');
+        // FIX: Ubah ke targetmenabung agar sinkron
+        await pool.execute(
+            'INSERT INTO targetmenabung (id_user, nama_target, target_jumlah, tanggal_target, jumlah_terkumpul, status) VALUES (?, ?, ?, ?, 0, "dalam_proses")',
+            [userId, nama_target, target_jumlah, tanggal_target]
+        );
+        res.status(201).json({ message: 'Target berhasil dibuat.' });
+    } catch (error: any) {
+        console.error('ERROR CREATE TARGET:', error.message);
+        res.status(500).json({ message: 'Gagal membuat target.' });
+    }
+};
 
-        const [result] = await pool.query<OkPacket>(
-            `
-            UPDATE targetmenabung 
-            SET jumlah_terkumpul = jumlah_terkumpul + ?,
-                status = CASE WHEN (jumlah_terkumpul + ?) >= target_jumlah THEN 'tercapai' ELSE 'aktif' END
-            WHERE id_target = ? AND id_user = ?
-            `,
-            [amount, amount, targetId, userId] // Gunakan targetId yang sudah di-parse
+/**
+ * [POST] Kontribusi Saldo ke Target Menabung
+ */
+export const contributeToTarget = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id_user;
+    const { id_target, jumlah } = req.body;
+
+    if (!id_target || !jumlah || jumlah <= 0) {
+        return res.status(400).json({ message: 'Data tidak valid.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Ambil Nama Target dan Cek Eksistensi Target
+        const [targetRows] = await connection.query<RowDataPacket[]>(
+            'SELECT nama_target FROM targetmenabung WHERE id_target = ? AND id_user = ?',
+            [id_target, userId]
         );
 
-        if (result.affectedRows === 0) {
-            await pool.query('ROLLBACK');
-            return res.status(404).json({ message: 'Target tidak ditemukan atau bukan milik Anda.' });
+        if (targetRows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Target tidak ditemukan.' });
         }
 
-        await pool.query('COMMIT');
-        res.status(200).json({ message: 'Dana berhasil ditambahkan ke target.' });
-        
-    } catch (error) {
-        await pool.query('ROLLBACK');
-        console.error('Error saat kontribusi dana:', error);
-        res.status(500).json({ message: 'Gagal menambahkan dana ke target.' });
+        const namaTarget = targetRows[0].nama_target;
+
+        // 2. Cek Saldo Utama
+        const [saldoRows] = await connection.query<RowDataPacket[]>(
+            'SELECT saldo_sekarang FROM saldo WHERE id_user = ?',
+            [userId]
+        );
+        const saldoSekarang = saldoRows[0]?.saldo_sekarang || 0;
+
+        if (saldoSekarang < jumlah) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Saldo utama tidak mencukupi.' });
+        }
+
+        // 3. Kurangi Saldo Utama
+        await connection.execute(
+            'UPDATE saldo SET saldo_sekarang = saldo_sekarang - ? WHERE id_user = ?',
+            [jumlah, userId]
+        );
+
+        // 4. Tambah jumlah_terkumpul ke Target
+        await connection.execute(
+            'UPDATE targetmenabung SET jumlah_terkumpul = jumlah_terkumpul + ? WHERE id_target = ? AND id_user = ?',
+            [jumlah, id_target, userId]
+        );
+
+        // 5. Catat ke riwayat transaksi menggunakan NAMA TARGET
+        await connection.execute(
+            `INSERT INTO transaksi (id_user, id_kategori, jenis, jumlah, keterangan, tanggal) VALUES 
+            (?, (SELECT id_kategori FROM kategori WHERE nama_kategori = 'Tabungan' LIMIT 1), 'pengeluaran', ?, ?, NOW())`,
+            [
+                userId, 
+                jumlah, 
+                `Kontribusi Target: ${namaTarget}` // Sekarang dinamis mengikuti nama target
+            ]
+        );
+
+        // 6. Update Status ke tercapai jika sudah cukup
+        await connection.execute(
+            'UPDATE targetmenabung SET status = "tercapai" WHERE id_target = ? AND jumlah_terkumpul >= target_jumlah',
+            [id_target]
+        );
+
+        await connection.commit();
+        res.status(200).json({ message: 'Kontribusi berhasil!' });
+
+    } catch (error: any) {
+        await connection.rollback();
+        console.error('Error kontribusi target:', error.message);
+        res.status(500).json({ message: 'Terjadi kesalahan saat memproses kontribusi.' });
+    } finally {
+        connection.release();
     }
 };

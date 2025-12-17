@@ -47,10 +47,16 @@ html, body {
 .bg-gradient-full {
   min-height: 100vh;
   /* Atur gradasi yang Anda sukai, contoh dari LoginPage: */
-  background: linear-gradient(to top, #00bcd4 0%, #4dd0e1 100%);
+  background: linear-gradient(to top, #99e4ee 30%, #ffffff 100%);
 }
 
 /* Font umum */
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.back-button-wrapper:hover {
+  background-color: #f8f9fa !important; /* Warna abu muda saat hover */
+  transform: translateX(-5px); /* Geser sedikit ke kiri saat hover */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
 }

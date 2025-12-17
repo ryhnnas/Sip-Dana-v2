@@ -62,13 +62,23 @@ const LoginPage = () => {
         <Row className="justify-content-center">
           <Col xs={11} sm={8} md={6} lg={4}>
             
-            <div className="mb-4 d-flex align-items-center">
-              <ArrowLeft size={30} onClick={() => navigate('/')} style={{ cursor: 'pointer', color: 'white' }} />
+            <div className="mb-4">
+              <div 
+                onClick={() => navigate('/')} 
+                className="d-flex align-items-center justify-content-center bg-white shadow-sm rounded-circle back-button-wrapper"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <ArrowLeft size={24} color="#0d6efd" />
+              </div>
             </div>
 
             <div className="text-center mb-5">
-              <img src={SipDanaLogo} alt="SipDana Logo" style={{ height: '40px' }} className="mb-2" />
-              <h4 className="text-white">SipDana</h4>
+              <img src={SipDanaLogo} alt="SipDana Logo" style={{ height: '60px' }} className="mb-2" />
             </div>
 
             <Card className="shadow-lg border-0" style={{ borderRadius: '15px' }}>

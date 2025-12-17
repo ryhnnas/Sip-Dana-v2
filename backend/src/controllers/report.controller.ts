@@ -3,31 +3,27 @@ import pool from '../config/db.config';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { RowDataPacket } from 'mysql2';
 
-// Tipe data untuk parameter filter yang fleksibel
 interface FilterParams {
     month?: string; 
     year?: string;  
     start_date?: string;
     end_date?: string;   
+    unit?: 'mingguan' | 'bulanan' | 'tahunan'; // Tambahan untuk grafik
 }
 
-// Helper function untuk membangun klausa WHERE berdasarkan parameter query
 const buildTimeFilter = (req: AuthRequest): { clause: string, values: (string | number)[] } => {
     const { month, year, start_date, end_date } = req.query as FilterParams;
     let clause = '';
     let values: (string | number)[] = [];
 
-    // 1. Filter Mingguan/Custom Date Range
     if (start_date && end_date) {
         clause = 'AND DATE(tanggal) BETWEEN ? AND ?'; 
         values.push(start_date as string, end_date as string);
     } 
-    // 2. Filter Bulanan
     else if (month) {
         clause = 'AND DATE_FORMAT(tanggal, "%Y-%m") = ?';
         values.push(month as string);
     } 
-    // 3. Filter Tahunan
     else if (year) {
         clause = 'AND YEAR(tanggal) = ?';
         values.push(year as string);
@@ -36,16 +32,13 @@ const buildTimeFilter = (req: AuthRequest): { clause: string, values: (string | 
     return { clause, values };
 };
 
-
 /**
- * [GET] Mengambil Riwayat Transaksi Terbaru (DIFILTER BERDASARKAN WAKTU)
- * Endpoint: GET /api/reports/history
+ * [GET] Mengambil Riwayat Transaksi Terbaru
  */
 export const getTransactionHistory = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id_user;
     if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
 
-    // FIX: Ambil filter dari helper function
     const { clause, values } = buildTimeFilter(req);
     
     try {
@@ -59,7 +52,7 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response) => 
             ORDER BY t.created_at DESC
             LIMIT 6
             `,
-            [userId, ...values] // FIX: Gabungkan values filter
+            [userId, ...values]
         ); 
 
         res.status(200).json({
@@ -72,110 +65,23 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response) => 
     }
 };
 
-
 /**
- * [GET] Mengambil Ringkasan Laporan Bulanan (Saldo, Pemasukan, Pengeluaran)
- * Endpoint: GET /api/reports/summary?month=YYYY-MM
+ * [GET] Mengambil Ringkasan Laporan (Saldo, Pemasukan, Pengeluaran)
  */
 export const getMonthlySummary = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id_user;
     if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
 
-    // FIX: Ambil filter dari helper function
     const { clause, values } = buildTimeFilter(req);
     
-    // 1. Ambil Total Saldo Saat Ini (TIDAK BERUBAH karena saldo adalah nilai kumulatif)
-    const [saldoRow] = await pool.query<RowDataPacket[]>(
-        'SELECT saldo_sekarang FROM saldo WHERE id_user = ?',
-        [userId]
-    ); 
-    const saldoAkhir = saldoRow.length > 0 ? saldoRow[0].saldo_sekarang : 0; 
-    
-    // 2. Hitung Pemasukan dan Pengeluaran (DIFILTER BERDASARKAN WAKTU)
-    const [summaryRows] = await pool.query<RowDataPacket[]>(
-        `
-        SELECT 
-            SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS totalPemasukan,
-            SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS totalPengeluaran
-        FROM transaksi
-        WHERE id_user = ? ${clause}
-        `,
-        [userId, ...values] // FIX: Gabungkan values filter
-    );
-
-    const summary = summaryRows[0];
-    const totalPemasukan = summary?.totalPemasukan || 0;
-    const totalPengeluaran = summary?.totalPengeluaran || 0;
-    const neto = totalPemasukan - totalPengeluaran;
-
-    res.status(200).json({
-        message: `Ringkasan berhasil diambil.`,
-        data: {
-            bulan: (req.query.month as string) || (req.query.year as string), // Untuk tampilan
-            totalPemasukan,
-            totalPengeluaran,
-            neto,
-            saldoAkhir // Nilai saldo kumulatif (tidak difilter)
-        }
-    });
-};
-
-
-/**
- * [GET] Mengambil Data Historis (6 Bulan Terakhir) untuk Grafik
- * Endpoint: GET /api/reports/historical
- */
-export const getHistoricalData = async (req: AuthRequest, res: Response) => {
-    const userId = req.user?.id_user;
-    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
-
     try {
-        const [rows] = await pool.query<RowDataPacket[]>(
-            `
-            SELECT
-                DATE_FORMAT(tanggal, '%Y-%m') AS monthYear,
-                DATE_FORMAT(tanggal, '%b') AS monthName,
-                SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS pemasukan,
-                SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS pengeluaran
-            FROM transaksi
-            WHERE id_user = ?
-            GROUP BY monthYear, monthName
-            ORDER BY monthYear DESC
-            LIMIT 6
-            `,
+        const [saldoRow] = await pool.query<RowDataPacket[]>(
+            'SELECT saldo_sekarang FROM saldo WHERE id_user = ?',
             [userId]
-        );
+        ); 
+        const saldoAkhir = saldoRow.length > 0 ? saldoRow[0].saldo_sekarang : 0; 
         
-        const chartData = rows.reverse().map(row => ({
-            month: row.monthName,
-            pemasukan: row.pemasukan,
-            pengeluaran: row.pengeluaran
-        }));
-
-        res.status(200).json({
-            message: 'Data historis berhasil diambil.',
-            data: chartData
-        });
-    } catch (error) {
-        console.error('Error saat mengambil data historis:', error);
-        res.status(500).json({ message: 'Gagal mengambil data historis.' });
-    }
-};
-
-
-/**
- * [GET] Mengambil Laporan Analisis Lengkap (Summary, Top Kategori, Rekomendasi)
- * Endpoint: GET /api/reports/analysis?month=YYYY-MM
- */
-export const getAnalysisReport = async (req: AuthRequest, res: Response) => {
-    const userId = req.user?.id_user;
-    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
-
-    const { clause, values } = buildTimeFilter(req);
-
-    try {
-        // --- 1. Ambil Summary (Menggunakan Filter Waktu) ---
-        const [summaryQuery] = await pool.query<RowDataPacket[]>(
+        const [summaryRows] = await pool.query<RowDataPacket[]>(
             `
             SELECT 
                 SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS totalPemasukan,
@@ -185,46 +91,152 @@ export const getAnalysisReport = async (req: AuthRequest, res: Response) => {
             `,
             [userId, ...values]
         );
+
+        const summary = summaryRows[0];
+        const totalPemasukan = summary?.totalPemasukan || 0;
+        const totalPengeluaran = summary?.totalPengeluaran || 0;
+        const neto = totalPemasukan - totalPengeluaran;
+
+        res.status(200).json({
+            message: `Ringkasan berhasil diambil.`,
+            data: { totalPemasukan, totalPengeluaran, neto, saldoAkhir }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengambil ringkasan.' });
+    }
+};
+
+/**
+ * [GET] Mengambil Data Historis DINAMIS (Mingguan / Bulanan / Tahunan)
+ */
+export const getHistoricalData = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id_user;
+    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
+
+    const { unit } = req.query as FilterParams;
+
+    // Inisialisasi variabel dengan 'let' agar tidak error
+    let groupBy = '';
+    let labelField = ''; // Variabel ini yang tadi menyebabkan error
+    let limit = 6;
+
+    // LOGIKA PENENTUAN GRUP WAKTU
+    switch (unit) {
+        case 'mingguan':
+            // Grup berdasarkan nomor minggu, tapi label menampilkan Tanggal Senin (Awal Minggu)
+            groupBy = 'YEARWEEK(tanggal, 1)';
+            labelField = "DATE_FORMAT(DATE_SUB(tanggal, INTERVAL WEEKDAY(tanggal) DAY), '%d %b')";
+            limit = 8;
+            break;
+        case 'tahunan':
+            groupBy = 'YEAR(tanggal)';
+            labelField = 'YEAR(tanggal)';
+            limit = 5;
+            break;
+        case 'bulanan':
+        default:
+            groupBy = 'DATE_FORMAT(tanggal, "%Y-%m")';
+            labelField = 'DATE_FORMAT(tanggal, "%b")';
+            limit = 6;
+            break;
+    }
+
+    try {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `
+            SELECT
+                ${groupBy} AS groupKey,
+                ${labelField} AS label,
+                SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS pemasukan,
+                SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS pengeluaran
+            FROM transaksi
+            WHERE id_user = ?
+            GROUP BY groupKey, label
+            ORDER BY groupKey DESC
+            LIMIT ?
+            `,
+            [userId, limit]
+        );
+        
+        const chartData = rows.reverse().map(row => ({
+            label: row.label,
+            pemasukan: parseFloat(row.pemasukan) || 0,
+            pengeluaran: parseFloat(row.pengeluaran) || 0
+        }));
+
+        res.status(200).json({
+            message: `Data historis ${unit || 'bulanan'} berhasil diambil.`,
+            data: chartData
+        });
+    } catch (error) {
+        console.error('Error Historical Data:', error);
+        res.status(500).json({ message: 'Gagal mengambil data historis.' });
+    }
+};
+
+/**
+ * [GET] Mengambil Laporan Analisis Lengkap
+ */
+export const getAnalysisReport = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id_user;
+    if (!userId) return res.status(401).json({ message: 'User ID tidak ditemukan.' });
+
+    const { clause, values } = buildTimeFilter(req);
+
+    try {
+        const [summaryQuery] = await pool.query<RowDataPacket[]>(
+            `SELECT 
+                SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS totalPemasukan,
+                SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS totalPengeluaran
+            FROM transaksi
+            WHERE id_user = ? ${clause}`,
+            [userId, ...values]
+        );
         const totalPemasukan = summaryQuery[0]?.totalPemasukan || 0;
         const totalPengeluaran = summaryQuery[0]?.totalPengeluaran || 0;
         const neto = totalPemasukan - totalPengeluaran;
 
-        // --- 2. Ambil Top Pengeluaran (Menggunakan Filter Waktu) ---
         const [topOut] = await pool.query<RowDataPacket[]>(
-            `
-            SELECT 
-                k.nama_kategori, 
-                SUM(t.jumlah) AS jumlah,
-                (SUM(t.jumlah) / ?) * 100 AS persentase
+            `SELECT k.nama_kategori, SUM(t.jumlah) AS jumlah
             FROM transaksi t
             JOIN kategori k ON t.id_kategori = k.id_kategori
             WHERE t.id_user = ? AND t.jenis = 'pengeluaran' ${clause}
-            GROUP BY k.nama_kategori
-            ORDER BY jumlah DESC
-            LIMIT 1
-            `,
-            [totalPengeluaran || 1, userId, ...values] // totalPengeluaran || 1 untuk mencegah division by zero
+            GROUP BY k.nama_kategori ORDER BY jumlah DESC LIMIT 1`,
+            [userId, ...values]
         );
-        
-        // --- 3. Ambil Rekomendasi Metode (Sederhana: Pay Yourself First jika surplus) ---
-        let recommendation = null;
-        if (neto > 0) {
-            const [metode] = await pool.query<RowDataPacket[]>(
-                'SELECT namaMetode, deskripsiMetode FROM metodemengelola WHERE namaMetode = "Pay Yourself First"'
-            );
-            recommendation = metode[0] || null;
+
+        let tipe: string;
+        if (totalPemasukan === 0 && totalPengeluaran === 0) {
+            tipe = 'Umum';
+        } else if (neto < 0) {
+            tipe = 'Kontrol Pengeluaran';
+        } else if (neto > totalPemasukan * 0.2) {
+            tipe = 'Optimasi Keuangan';
+        } else {
+            tipe = 'Umum';
         }
+
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT 
+                r.tipeRekomendasi, r.detailRekomendasi, m.namaMetode, 
+                m.deskripsiMetode, m.langkah_implementasi 
+             FROM rekomendasi r
+             LEFT JOIN metodemengelola m ON r.id_metode = m.id_metode
+             WHERE r.tipeRekomendasi = ?
+             ORDER BY RAND() LIMIT 1`, 
+            [tipe]
+        );
 
         res.status(200).json({
             message: 'Laporan analisis berhasil diambil.',
             data: {
-                summary: { totalPemasukan, totalPengeluaran, neto, saldoAkhir: 0 }, 
+                summary: { totalPemasukan, totalPengeluaran, neto },
                 topPengeluaran: topOut[0] || null,
-                recommendation: recommendation,
+                recommendation: rows[0] || null
             }
         });
     } catch (error) {
-        console.error('Error saat mengambil analisis laporan:', error);
+        console.error('Error Analysis:', error);
         res.status(500).json({ message: 'Gagal mengambil data analisis.' });
     }
 };

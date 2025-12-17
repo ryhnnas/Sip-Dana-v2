@@ -23,8 +23,12 @@ const formatRupiah = (amount: number) => {
 };
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAdded, openTransactionModal, hideAddButton = false }) => {
+    // 1. Ambil fungsi navigate dari hook
     const { unit, period, navigate, changeUnit } = useTimeFilter('bulan'); 
     
+    // 2. State untuk sembunyi/tampilkan saldo
+    const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+
     const [transactions, setTransactions] = useState<TransactionHistoryItem[]>([]);
     const [summary, setSummary] = useState<MonthlySummary | null>(null);
     const [loading, setLoading] = useState(true);
@@ -62,22 +66,42 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
     return (
         <div style={{ backgroundColor: '#e3f2fd', minHeight: '100vh', padding: '20px' }}>
             
-            {/* Box Ringkasan dengan desain baru */}
+            {/* Box Ringkasan */}
             <Card className="mb-4 shadow-sm border-0" style={{ borderRadius: '20px', overflow: 'hidden' }}>
                 <Card.Body className="p-4">
-                    {/* Header dengan icon mata */}
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="mb-0 fw-bold">{period.display}</h5>
-                        <Button variant="link" className="p-0 text-secondary">
-                            <i className="bi bi-eye" style={{ fontSize: '20px' }}></i>
+                    {/* Header dengan Navigasi Geser & Icon Mata */}
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div className="d-flex align-items-center gap-2">
+                            {/* Tombol Geser Kiri */}
+                            <Button variant="light" size="sm" onClick={() => navigate('prev')} className="rounded-circle shadow-sm p-1">
+                                <ArrowLeftShort size={24} />
+                            </Button>
+                            
+                            <h5 className="mb-0 fw-bold mx-1" style={{ fontSize: '16px' }}>{period.display}</h5>
+                            
+                            {/* Tombol Geser Kanan */}
+                            <Button variant="light" size="sm" onClick={() => navigate('next')} className="rounded-circle shadow-sm p-1">
+                                <ArrowRightShort size={24} />
+                            </Button>
+                        </div>
+
+                        {/* Tombol Icon Mata */}
+                        <Button 
+                            variant="link" 
+                            className="p-0 text-secondary shadow-none" 
+                            onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                        >
+                            {isBalanceVisible ? (
+                                <i className="bi bi-eye-fill" style={{ fontSize: '20px' }}></i>
+                            ) : (
+                                <i className="bi bi-eye-slash-fill" style={{ fontSize: '20px' }}></i>
+                            )}
                         </Button>
                     </div>
                     
                     {/* Ringkasan Angka */}
                     {loading ? (
                         <div className="text-center py-3"><Spinner animation="border" size="sm" /></div>
-                    ) : error ? (
-                        <Alert variant="warning" className="small">{error}</Alert>
                     ) : (
                         <>
                             <div className="d-flex justify-content-between mb-2">
@@ -94,65 +118,46 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
                             </div>
                             
                             <hr className="my-2" />
-                            <div className="d-flex justify-content-between">
+                            <div className="d-flex justify-content-between align-items-center">
                                 <span className="fw-bold" style={{ fontSize: '14px' }}>Total</span>
                                 <span className="fw-bold" style={{ 
                                     color: totalNeto >= 0 ? '#4caf50' : '#f44336',
-                                    fontSize: '16px' 
+                                    fontSize: '18px' 
                                 }}>
-                                    {totalNeto >= 0 ? '+' : ''}{formatRupiah(totalNeto)}
+                                    {isBalanceVisible 
+                                        ? `${totalNeto >= 0 ? '+' : ''}${formatRupiah(totalNeto)}` 
+                                        : 'Rp ••••••••'}
                                 </span>
                             </div>
                         </>
                     )}
 
-                    {/* Filter Unit dengan design pill */}
-                    <div className="d-flex gap-2 mt-3">
-                        <Button 
-                            variant={unit === 'mingguan' ? 'primary' : 'light'} 
-                            size="sm" 
-                            onClick={() => changeUnit('mingguan')}
-                            style={{ 
-                                borderRadius: '20px', 
-                                flex: 1,
-                                backgroundColor: unit === 'mingguan' ? '#2196f3' : '#fff',
-                                color: unit === 'mingguan' ? '#fff' : '#666',
-                                border: 'none',
-                                fontWeight: 500
-                            }}
-                        >
-                            Minggu
-                        </Button>
-                        <Button 
-                            variant={unit === 'bulan' ? 'primary' : 'light'} 
-                            size="sm" 
-                            onClick={() => changeUnit('bulan')}
-                            style={{ 
-                                borderRadius: '20px', 
-                                flex: 1,
-                                backgroundColor: unit === 'bulan' ? '#2196f3' : '#fff',
-                                color: unit === 'bulan' ? '#fff' : '#666',
-                                border: 'none',
-                                fontWeight: 500
-                            }}
-                        >
-                            Bulan
-                        </Button>
-                        <Button 
-                            variant={unit === 'tahunan' ? 'primary' : 'light'} 
-                            size="sm" 
-                            onClick={() => changeUnit('tahunan')}
-                            style={{ 
-                                borderRadius: '20px', 
-                                flex: 1,
-                                backgroundColor: unit === 'tahunan' ? '#2196f3' : '#fff',
-                                color: unit === 'tahunan' ? '#fff' : '#666',
-                                border: 'none',
-                                fontWeight: 500
-                            }}
-                        >
-                            Tahun
-                        </Button>
+                    {/* Filter Unit */}
+                    <div className="d-flex gap-2 mt-4 bg-light p-1 rounded-pill">
+                        {['mingguan', 'bulan', 'tahunan'].map((u) => {
+                            let displayLabel = "";
+                            if (u === 'mingguan') displayLabel = "Minggu";
+                            else if (u === 'bulan') displayLabel = "Bulan";
+                            else if (u === 'tahunan') displayLabel = "Tahun";
+
+                            return (
+                                <Button 
+                                    key={u}
+                                    variant={unit === u ? 'primary' : 'light'} 
+                                    size="sm" 
+                                    onClick={() => changeUnit(u as any)}
+                                    className="rounded-pill border-0 flex-grow-1 fw-bold"
+                                    style={{ 
+                                        fontSize: '12px',
+                                        transition: '0.3s',
+                                        backgroundColor: unit === u ? '#007bff' : 'transparent',
+                                        color: unit === u ? '#fff' : '#6c757d'
+                                    }}
+                                >
+                                    {displayLabel}
+                                </Button>
+                            );
+                        })}
                     </div>
                 </Card.Body>
             </Card>
@@ -167,42 +172,48 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onTransactionAd
                 </div>
             ) : (
                 <div className="mb-5">
-                    {transactions.map((tx) => (
-                        <Card 
-                            key={tx.id_transaksi} 
-                            className="mb-3 shadow-sm border-0"
-                            style={{ borderRadius: '15px' }}
-                        >
-                            <Card.Body className="p-3">
-                                <div className="d-flex align-items-center">
-                                    {/* Keterangan dan Tanggal */}
-                                    <div className="flex-grow-1">
-                                        <div className="fw-bold" style={{ fontSize: '15px' }}>
-                                            {tx.keterangan}
+                    {transactions.map((tx) => {
+                        // LOGIKA MEMBERSIHKAN TEKS (CARA 2)
+                        // Mengubah "Kontribusi Target ID: 1" menjadi "Tabungan Target #1"
+                        const displayKeterangan = tx.keterangan.replace('Kontribusi Target ID:', 'Tabungan Target #');
+
+                        return (
+                            <Card 
+                                key={tx.id_transaksi} 
+                                className="mb-3 shadow-sm border-0"
+                                style={{ borderRadius: '15px' }}
+                            >
+                                <Card.Body className="p-3">
+                                    <div className="d-flex align-items-center">
+                                        {/* Keterangan dan Tanggal */}
+                                        <div className="flex-grow-1">
+                                            <div className="fw-bold" style={{ fontSize: '15px' }}>
+                                                {displayKeterangan}
+                                            </div>
+                                            <small className="text-muted" style={{ fontSize: '12px' }}>
+                                                {new Date(tx.tanggal).toLocaleDateString('id-ID', { 
+                                                    day: '2-digit', 
+                                                    month: 'long', 
+                                                    year: 'numeric',
+                                                })}
+                                            </small>
                                         </div>
-                                        <small className="text-muted" style={{ fontSize: '12px' }}>
-                                            {new Date(tx.tanggal).toLocaleDateString('id-ID', { 
-                                                day: '2-digit', 
-                                                month: 'long', 
-                                                year: 'numeric',
-                                            })}
-                                        </small>
+                                        
+                                        {/* Jumlah */}
+                                        <div 
+                                            className="fw-bold" 
+                                            style={{ 
+                                                color: tx.jenis === 'pemasukan' ? '#4caf50' : '#f44336',
+                                                fontSize: '15px'
+                                            }}
+                                        >
+                                            {formatRupiah(tx.jumlah)}
+                                        </div>
                                     </div>
-                                    
-                                    {/* Jumlah */}
-                                    <div 
-                                        className="fw-bold" 
-                                        style={{ 
-                                            color: tx.jenis === 'pemasukan' ? '#4caf50' : '#f44336',
-                                            fontSize: '15px'
-                                        }}
-                                    >
-                                        {formatRupiah(tx.jumlah)}
-                                    </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    ))}
+                                </Card.Body>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
             

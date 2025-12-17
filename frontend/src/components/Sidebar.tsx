@@ -58,10 +58,13 @@ const Sidebar = () => {
       style={{ 
         height: '100vh', 
         backgroundColor: '#007bff', 
-        position: 'relative',
+        position: 'sticky', // UBAH INI dari 'relative' ke 'sticky'
+        top: 0,             // TAMBAH INI agar menempel di atas
+        left: 0,            // TAMBAH INI agar menempel di kiri
         padding: '20px 0 20px 0', 
+        overflowY: 'auto',  // TAMBAH INI jika menu sidebar sangat banyak, sidebar bisa di-scroll sendiri
       }}
-      className="d-flex flex-column" 
+      className="d-flex flex-column shadow" 
     >
       
       {/* Logo Kustom */}

@@ -19,11 +19,13 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
             token = req.headers.authorization.split(' ')[1];
 
             // 2. Verifikasi token
-            const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
-
-            // 3. Simpan data pengguna ke objek request
-            // Data pengguna yang disimpan adalah payload JWT (id_user, username, email)
-            req.user = decoded; 
+            // Di dalam middleware protect / auth
+            const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+            req.user = { 
+                id_user: decoded.id_user,
+                username: decoded.username || '', // tambahkan fallback string kosong
+                email: decoded.email || '' 
+            };
 
             // Lanjutkan ke controller transaksi
             next();
