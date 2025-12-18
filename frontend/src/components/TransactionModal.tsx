@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { PlusCircle, InfoCircle, XCircle } from 'react-bootstrap-icons';
+import { 
+    CheckCircle, 
+    XCircle, 
+    Calendar, 
+    Tag, 
+    FileText, 
+    Wallet2, 
+    ArrowUpCircle, 
+    ArrowDownCircle 
+} from 'react-bootstrap-icons';
 import { fetchCategories } from '../services/utility.service';
 import { createTransaction } from '../services/transaction.service';
 import type { TransactionInput, Category, TransactionType } from '../types/transaction.types'; 
 import type { AxiosError } from 'axios'; 
-import type { HTMLSelectElement, HTMLTextAreaElement } from 'react'; // Impor tipe React standar
 
-// Tipe data untuk error response
+// --- DEFINISI YANG HILANG (WAJIB ADA) ---
+
 interface BackendErrorResponse {
     message: string;
 }
@@ -18,16 +27,14 @@ interface TransactionModalProps {
     onSuccess: () => void;
 }
 
-// FIX: Ubah jumlah menjadi string untuk masking
 const initialFormState: Omit<TransactionInput, 'jumlah'> & { jumlah: string } = {
-    jenis: 'pengeluaran', 
-    jumlah: '', // <-- Harus string untuk masking
+    jenis: 'pemasukan', 
+    jumlah: '',
     tanggal: new Date().toISOString().split('T')[0], 
     keterangan: '',
     id_kategori: 0,
 };
 
-// Fungsi helper untuk mendapatkan pesan error dari Axios
 const getErrorMessage = (err: unknown): string => {
     const axiosError = err as AxiosError<BackendErrorResponse>;
     if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
@@ -36,26 +43,36 @@ const getErrorMessage = (err: unknown): string => {
     return 'Terjadi kesalahan jaringan atau server.';
 };
 
+// --- KOMPONEN UTAMA ---
+
 const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, onSuccess }) => {
-    // FIX: State menggunakan tipe data baru yang menerima jumlah sebagai string
-    const [formData, setFormData] = useState<Omit<TransactionInput, 'jumlah'> & { jumlah: string }>(initialFormState);
+    const [formData, setFormData] = useState(initialFormState);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
     const [catLoading, setCatLoading] = useState(true);
     const [message, setMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
+
+    // Style kustom untuk tampilan modern
+    const inputStyle = {
+        borderRadius: '12px',
+        padding: '0.75rem 1rem',
+        border: '1px solid #e2e8f0',
+        backgroundColor: '#f8fafc',
+    };
 
     const loadCategories = useCallback(async () => {
         setCatLoading(true);
         try {
             const cats = await fetchCategories();
             setCategories(cats);
-            
             if (cats.length > 0) {
-                setFormData(prev => ({ ...prev, id_kategori: prev.id_kategori === 0 ? cats[0].id_kategori : prev.id_kategori }));
+                setFormData(prev => ({ 
+                    ...prev, 
+                    id_kategori: prev.id_kategori === 0 ? cats[0].id_kategori : prev.id_kategori 
+                }));
             }
         } catch (err: unknown) {
-            const msg = getErrorMessage(err);
-            setMessage({ type: 'danger', text: msg });
+            setMessage({ type: 'danger', text: getErrorMessage(err) });
         } finally {
             setCatLoading(false);
         }
@@ -64,32 +81,26 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, 
     useEffect(() => {
         if (show) {
              loadCategories();
-             // Reset form dan message setiap kali modal dibuka
              setFormData(initialFormState);
              setMessage(null);
         }
     }, [show, loadCategories]); 
 
-    // FIX: Tipe data handleChange diperluas untuk mencakup select, input, dan textarea
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setMessage(null);
         
         if (name === 'jumlah') {
-            // Logika Masking Input Ribuan
             const cleanValue = value.replace(/\D/g, ''); 
             const numberValue = parseInt(cleanValue) || 0;
-            // Menampilkan string berformat (e.g., 500.000)
-            const maskedValue = numberValue.toLocaleString('id-ID'); 
-            setFormData({ ...formData, [name]: maskedValue }); 
-            
+            setFormData({ ...formData, [name]: numberValue.toLocaleString('id-ID') }); 
         } else if (name === 'id_kategori') {
-            setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+            setFormData({ ...formData, [name]: parseInt(value) || 0 });
         } else {
             setFormData({ ...formData, [name]: value });
         }
     };
-    
+
     const handleTypeChange = (type: TransactionType) => {
         setFormData(prev => ({ ...prev, jenis: type }));
         setMessage(null);
@@ -97,161 +108,111 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // FIX: Konversi Jumlah Masked (string) ke number sebelum dikirim ke API
-        const numericJumlah = parseFloat(formData.jumlah.replace(/\./g, '').replace(/,/g, ''));
+        const numericJumlah = parseFloat(formData.jumlah.replace(/\./g, ''));
 
         if (numericJumlah <= 0 || !formData.keterangan || formData.id_kategori === 0) {
-            setMessage({ type: 'danger', text: 'Semua field wajib diisi dan Jumlah harus lebih dari 0.' });
+            setMessage({ type: 'danger', text: 'Semua field wajib diisi dengan benar.' });
             return;
         }
 
         setLoading(true);
-
         try {
-            // Data yang dikirim ke API
-            const dataToSend: TransactionInput = {
-                ...formData,
-                jumlah: numericJumlah, // <-- Kirim sebagai number
-            };
-
-            const { message } = await createTransaction(dataToSend);
-            setMessage({ type: 'success', text: message });
-            
+            const dataToSend: TransactionInput = { ...formData, jumlah: numericJumlah };
+            const res = await createTransaction(dataToSend);
+            setMessage({ type: 'success', text: res.message });
             setTimeout(() => {
-                handleClose(); 
-                setFormData(initialFormState); 
+                handleClose();
                 onSuccess();
             }, 1000);
-
         } catch (err: unknown) {
-            const msg = getErrorMessage(err);
-            setMessage({ type: 'danger', text: msg });
+            setMessage({ type: 'danger', text: getErrorMessage(err) });
         } finally {
             setLoading(false);
         }
     };
-    
-    // Fungsi untuk memfilter kategori
+
     const filteredCategories = categories.filter(cat => {
         const name = cat.nama_kategori.toLowerCase();
         const isIncomeCat = name.includes('gaji') || name.includes('bonus') || name.includes('investasi');
-        
-        if (formData.jenis === 'pemasukan') {
-             return isIncomeCat;
-        }
-        return !isIncomeCat;
+        return formData.jenis === 'pemasukan' ? isIncomeCat : !isIncomeCat;
     });
 
     return (
-        <Modal show={show} onHide={handleClose} centered backdrop="static">
-            <Modal.Header closeButton>
-                <Modal.Title className="d-flex align-items-center text-primary">
-                    <PlusCircle size={24} className="me-2" /> Tambah Transaksi Baru
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                
-                {/* Tombol Pemilih Jenis Transaksi */}
-                <div className="d-flex justify-content-center mb-4">
-                    <Button 
-                        variant={formData.jenis === 'pengeluaran' ? 'danger' : 'outline-secondary'}
-                        onClick={() => handleTypeChange('pengeluaran')}
-                        className="me-2 fw-bold"
-                    >
-                        Pengeluaran
-                    </Button>
-                    <Button 
-                        variant={formData.jenis === 'pemasukan' ? 'success' : 'outline-secondary'}
-                        onClick={() => handleTypeChange('pemasukan')}
-                        className="fw-bold"
-                    >
-                        Pemasukan
-                    </Button>
-                </div>
-                
-                {message && (
-                    <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="d-flex align-items-center small">
-                        {message.type === 'success' ? <InfoCircle size={18} className="me-2" /> : <XCircle size={18} className="me-2" />}
-                        {message.text}
-                    </Alert>
-                )}
+        <Modal show={show} onHide={handleClose} centered backdrop="static" size="md">
+            <div className="bg-white shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden', border: 'none' }}>
+                <Modal.Header closeButton className="border-0 pt-4 px-4 pb-0">
+                    <Modal.Title className="fw-bold d-flex align-items-center">
+                        <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                            <Wallet2 size={24} />
+                        </div>
+                        Catat Transaksi
+                    </Modal.Title>
+                </Modal.Header>
 
-                <Form onSubmit={handleSubmit}>
-                    
-                    {/* Jumlah (Type TEXT dengan inputMode=numeric untuk masking) */}
-                    <Form.Group className="mb-3" controlId="formJumlah">
-                        <Form.Label className="fw-bold">Jumlah (Rp)</Form.Label>
-                        <Form.Control
-                            type="text" // <-- FIX: type="text"
-                            name="jumlah"
-                            placeholder="Contoh: 500.000"
-                            value={formData.jumlah} // <-- Menampilkan string masked
-                            onChange={handleChange}
-                            required
-                            inputMode="numeric" // <-- Membuka keyboard numerik di mobile
-                        />
-                    </Form.Group>
+                <Modal.Body className="px-4 pb-4 pt-3">
+                    {message && (
+                        <Alert variant={message.type} className="border-0 rounded-4 mb-4">
+                            {message.type === 'success' ? <CheckCircle className="me-2" /> : <XCircle className="me-2" />}
+                            <small className="fw-medium">{message.text}</small>
+                        </Alert>
+                    )}
 
-                    {/* Keterangan */}
-                    <Form.Group className="mb-3" controlId="formKeterangan">
-                        <Form.Label className="fw-bold">Keterangan/Deskripsi</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            name="keterangan"
-                            placeholder="Contoh: Beli Makan Siang"
-                            value={formData.keterangan}
-                            onChange={handleChange}
-                            required
-                        />
-                    </Form.Group>
+                    <Form onSubmit={handleSubmit}>
+                        {/* Tab Switcher */}
+                        
+                        <div className="d-flex p-1 bg-light rounded-4 mb-4" style={{ borderRadius: '15px' }}>
+                            <button
+                                type="button"
+                                onClick={() => handleTypeChange('pemasukan')}
+                                className={`flex-fill border-0 py-2 rounded-4 ${formData.jenis === 'pemasukan' ? 'bg-white shadow-sm fw-bold text-success' : 'bg-transparent text-muted'}`}
+                                style={{ borderRadius: '12px', fontSize: '14px', transition: '0.3s' }}
+                            >
+                                <ArrowUpCircle className="me-2" /> Pemasukan
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleTypeChange('pengeluaran')}
+                                className={`flex-fill border-0 py-2 rounded-4 ${formData.jenis === 'pengeluaran' ? 'bg-white shadow-sm fw-bold text-danger' : 'bg-transparent text-muted'}`}
+                                style={{ borderRadius: '12px', fontSize: '14px', transition: '0.3s' }}
+                            >
+                                <ArrowDownCircle className="me-2" /> Pengeluaran
+                            </button>
+                        </div>
 
-                    {/* Tanggal */}
-                    <Form.Group className="mb-3" controlId="formTanggal">
-                        <Form.Label className="fw-bold">Tanggal</Form.Label>
-                        <Form.Control
-                            type="date"
-                            name="tanggal"
-                            value={formData.tanggal}
-                            onChange={handleChange}
-                            required
-                        />
-                    </Form.Group>
+                        <div className="row g-3">
+                            <div className="col-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-semibold small text-muted mb-2"><Calendar size={14} className="me-1"/> Tanggal</Form.Label>
+                                    <Form.Control type="date" name="tanggal" value={formData.tanggal} onChange={handleChange} required style={inputStyle} />
+                                </Form.Group>
+                            </div>
+                            <div className="col-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-semibold small text-muted mb-2"><Tag size={14} className="me-1"/> Kategori</Form.Label>
+                                    <Form.Select name="id_kategori" value={formData.id_kategori} onChange={handleChange} disabled={catLoading} required style={inputStyle}>
+                                        <option value={0} disabled>Pilih...</option>
+                                        {filteredCategories.map(cat => <option key={cat.id_kategori} value={cat.id_kategori}>{cat.nama_kategori}</option>)}
+                                    </Form.Select>
+                                </Form.Group>
+                            </div>
+                        </div>
 
-                    {/* Kategori */}
-                    <Form.Group className="mb-4" controlId="formKategori">
-                        <Form.Label className="fw-bold">Kategori</Form.Label>
-                        <Form.Select 
-                            name="id_kategori" 
-                            value={formData.id_kategori} 
-                            onChange={handleChange}
-                            disabled={catLoading}
-                            required
-                        >
-                            {catLoading ? (
-                                <option>Memuat Kategori...</option>
-                            ) : (
-                                <>
-                                    <option value={0} disabled>Pilih Kategori...</option>
-                                    {filteredCategories.map(cat => (
-                                        <option key={cat.id_kategori} value={cat.id_kategori}>
-                                            {cat.nama_kategori}
-                                        </option>
-                                    ))}
-                                </>
-                            )}
-                        </Form.Select>
-                    </Form.Group>
-                    
-                    <div className="d-grid mt-4">
-                        <Button variant="primary" type="submit" disabled={loading} className="fw-bold py-2">
-                            {loading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" /> : <PlusCircle size={18} className="me-2" />}
-                            Catat Transaksi
+                        <Form.Group className="mt-3 mb-3">
+                            <Form.Label className="fw-semibold small text-muted mb-2"><Wallet2 size={14} className="me-1"/> Nominal (Rp)</Form.Label>
+                            <Form.Control type="text" name="jumlah" placeholder="0" value={formData.jumlah} onChange={handleChange} required style={inputStyle} className="fw-bold fs-5 text-primary" />
+                        </Form.Group>
+
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-semibold small text-muted mb-2"><FileText size={14} className="me-1"/> Keterangan</Form.Label>
+                            <Form.Control as="textarea" name="keterangan" placeholder="Catatan transaksi..." value={formData.keterangan} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: 'none' }} />
+                        </Form.Group>
+
+                        <Button variant="primary" type="submit" disabled={loading} className="w-100 py-3 border-0 shadow-sm fw-bold" style={{ borderRadius: '15px' }}>
+                            {loading ? <Spinner animation="border" size="sm" /> : 'Simpan Transaksi'}
                         </Button>
-                    </div>
-
-                </Form>
-            </Modal.Body>
+                    </Form>
+                </Modal.Body>
+            </div>
         </Modal>
     );
 };
