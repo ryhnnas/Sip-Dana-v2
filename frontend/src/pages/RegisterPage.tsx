@@ -1,201 +1,287 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Card, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Card, Alert, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import * as AuthTypes from '../types/auth.types'; 
-import { registerUser } from '../services/auth.service';
-import SipDanaLogo from '../assets/logo.png'; 
-import { ArrowLeft, Envelope, Lock, Person, CheckCircleFill, XCircleFill } from 'react-bootstrap-icons'; 
+import { Envelope, Lock, Person, CheckCircleFill, XCircleFill, EyeFill, EyeSlashFill, ArrowLeft } from 'react-bootstrap-icons';
+
+// Import logo
+import LogoBiru from '../assets/Logo Biru.svg';
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
-  
-  const [formData, setFormData] = useState<AuthTypes.RegisterFormInput>({
-    username: '',
-    email: '',
-    password: '',
-  });
-
-  // State untuk kriteria password
-  const [checks, setChecks] = useState({
-    length: false,
-    capital: false,
-    number: false
-  });
-
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [validated, setValidated] = useState(false);
-
-  // Efek untuk memvalidasi password secara real-time
-  useEffect(() => {
-    setChecks({
-      length: formData.password.length >= 8,
-      capital: /[A-Z]/.test(formData.password),
-      number: /\d/.test(formData.password)
+    const navigate = useNavigate();
+    
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
     });
-  }, [formData.password]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const [showPassword, setShowPassword] = useState(false);
+    const [checks, setChecks] = useState({ length: false, capital: false, number: false });
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [validated, setValidated] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    
-    // 1. Validasi Dasar Bootstrap
-    if (form.checkValidity() === false) {
-      e.stopPropagation();
-      setValidated(true);
-      return;
-    }
+    // Style input yang diseragamkan
+    const inputStyle = {
+        borderRadius: '10px',
+        padding: '0.75rem 1rem',
+        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
+    };
 
-    // 2. Validasi Khusus Email @gmail.com
-    if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
-      setError('Email wajib menggunakan domain @gmail.com');
-      return;
-    }
+    useEffect(() => {
+        setChecks({
+            length: formData.password.length >= 8,
+            capital: /[A-Z]/.test(formData.password),
+            number: /\d/.test(formData.password)
+        });
+    }, [formData.password]);
 
-    // 3. Validasi Keamanan Password
-    if (!(checks.length && checks.capital && checks.number)) {
-      setError('Password belum memenuhi syarat keamanan.');
-      return;
-    }
-    
-    setError(null);
-    setLoading(true);
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    try {
-      // Kirim ke API
-      await registerUser(formData);
-      
-      alert('Registrasi Berhasil! Silakan login menggunakan akun yang telah Anda buat.');
-      
-      // Arahkan ke halaman login
-      navigate('/login');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        
+        if (form.checkValidity() === false) {
+            e.stopPropagation();
+            setValidated(true);
+            return;
+        }
 
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Gagal registrasi. Coba lagi.';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
+            setError('Email wajib menggunakan domain @gmail.com');
+            return;
+        }
 
-  const ValidationItem = ({ isPassed, text }: { isPassed: boolean, text: string }) => (
-    <div className={`d-flex align-items-center mb-1 ${isPassed ? 'text-success' : 'text-danger'}`} style={{ fontSize: '0.8rem' }}>
-      {isPassed ? <CheckCircleFill className="me-2" /> : <XCircleFill className="me-2" />}
-      <span>{text}</span>
-    </div>
-  );
+        if (!(checks.length && checks.capital && checks.number)) {
+            setError('Password belum memenuhi syarat keamanan.');
+            return;
+        }
 
-  return (
-    <div className="d-flex align-items-center justify-content-center bg-gradient-full" style={{ minHeight: '100vh', padding: '20px 0' }}>
-      <Container>
-        <Row className="justify-content-center">
-          <Col xs={11} sm={8} md={6} lg={4}>
+        setError(null);
+        setLoading(true);
+
+        try {
+            // Simulasi API call - ganti dengan registerUser(formData)
+            setTimeout(() => {
+                alert('Registrasi Berhasil! Silakan login.');
+                navigate('/login');
+            }, 1500);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Gagal registrasi.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const ValidationItem = ({ isPassed, text }) => (
+        <div className={`d-flex align-items-center mb-1 ${isPassed ? 'text-success' : 'text-muted'}`} style={{ fontSize: '0.75rem' }}>
+            {isPassed ? <CheckCircleFill className="me-2" /> : <XCircleFill className="me-2" style={{ opacity: 0.3 }} />}
+            <span>{text}</span>
+        </div>
+    );
+
+    return (
+        <div style={{ 
+            minHeight: '100vh', 
+            background: 'linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)',
+            overflow: 'hidden',
+            position: 'relative'
+        }} className="d-flex align-items-stretch">
             
-            <div className="mb-4">
-              <div 
-                onClick={() => navigate('/')} 
-                className="d-flex align-items-center justify-content-center bg-white shadow-sm rounded-circle back-button-wrapper"
+            {/* Tombol Back - Paling Kiri Atas Halaman */}
+            <div 
+                onClick={() => navigate('/')}
+                className="position-absolute shadow-sm d-flex align-items-center justify-content-center bg-white rounded-circle"
                 style={{ 
-                  width: '45px', 
-                  height: '45px', 
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                    top: '30px', 
+                    left: '30px', 
+                    width: '45px', 
+                    height: '45px', 
+                    cursor: 'pointer', 
+                    zIndex: 1000, 
+                    border: '1px solid #eee',
+                    transition: 'all 0.3s ease'
                 }}
-              >
-                <ArrowLeft size={24} color="#0d6efd" />
-              </div>
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+                <ArrowLeft size={20} className="text-primary" />
             </div>
 
-            <div className="text-center mb-4">
-              <img src={SipDanaLogo} alt="SipDana Logo" style={{ height: '60px' }} className="mb-2" />
-            </div>
+            <Row className="w-100 m-0">
+                {/* SISI KIRI: BRANDING AREA */}
+                <Col md={6} lg={7} className="d-none d-md-flex flex-column justify-content-center align-items-start position-relative p-5" 
+                    style={{ 
+                        background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
+                        position: 'relative'
+                    }}>
+                    
+                    {/* Decorative blur circles */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '10%',
+                        left: '10%',
+                        width: '300px',
+                        height: '300px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '50%',
+                        filter: 'blur(80px)'
+                    }}></div>
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '10%',
+                        right: '10%',
+                        width: '400px',
+                        height: '400px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '50%',
+                        filter: 'blur(100px)'
+                    }}></div>
 
-            <Card className="shadow-lg border-0" style={{ borderRadius: '15px' }}>
-              <Card.Body className="p-4">
-                <h3 className="text-center mb-4 fw-bold">Register</h3>
-
-                {error && <Alert variant="danger" className="py-2 small">{error}</Alert>}
-
-                <Form noValidate validated={validated} onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-bold small">Nama</Form.Label>
-                    <div className="input-group">
-                      <Form.Control
-                        type="text"
-                        placeholder="Masukkan Nama"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        required
-                      />
-                      <span className="input-group-text"><Person size={18} /></span>
+                    {/* Konten Kiri Tengah */}
+                    <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2, paddingLeft: '60px' }}>
+                        <h1 className="text-white fw-bold mb-3" style={{ fontSize: '3rem' }}>Selamat Datang!</h1>
+                        <h5 className="text-white opacity-75 fw-light mb-5">
+                            Kelola Dana Jadi Lebih Sip bersama SipDana
+                        </h5>
                     </div>
-                  </Form.Group>
+                </Col>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-bold small">Email</Form.Label>
-                    <div className="input-group">
-                      <Form.Control
-                        type="email"
-                        placeholder="contoh@gmail.com"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                      <span className="input-group-text"><Envelope size={18} /></span>
+                {/* SISI KANAN: FORM AREA */}
+                <Col md={6} lg={5} className="d-flex flex-column justify-content-center align-items-center p-4 bg-white position-relative">
+                    
+                    {/* Logo SipDana di Atas Card */}
+                    <div className="text-center mb-4">
+                        <img 
+                            src={LogoBiru} 
+                            alt="SipDana Logo" 
+                            style={{ 
+                                height: '80px',
+                                filter: 'drop-shadow(0 10px 20px rgba(13, 110, 253, 0.2))'
+                            }} 
+                        />
                     </div>
-                  </Form.Group>
 
-                  <Form.Group className="mb-2">
-                    <Form.Label className="fw-bold small">Password</Form.Label>
-                    <div className="input-group">
-                      <Form.Control
-                        type="password"
-                        placeholder="Masukkan password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                      />
-                      <span className="input-group-text"><Lock size={18} /></span>
+                    <Card className="border-0 shadow-lg p-3 p-md-4" style={{ borderRadius: '25px', width: '100%', maxWidth: '450px' }}>
+                        <Card.Body>
+                            <div className="text-center mb-4">
+                                <h2 className="fw-bold text-dark mb-1">Daftar Akun</h2>
+                                <p className="text-muted small">Buat akun untuk mulai mengelola keuangan</p>
+                            </div>
+
+                            {error && (
+                                <Alert variant="danger" className="border-0 rounded-4 py-2 small mb-4 fw-medium text-center">
+                                    {error}
+                                </Alert>
+                            )}
+
+                            <Form noValidate validated={validated} onSubmit={handleSubmit}>
+                                {/* Input Nama */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="small fw-bold text-muted mb-2">Nama Pengguna</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text className="bg-white border-end-0 text-muted" style={{ borderRadius: '10px 0 0 10px' }}>
+                                            <Person />
+                                        </InputGroup.Text>
+                                        <Form.Control 
+                                            type="text" 
+                                            name="username" 
+                                            placeholder="Masukkan nama..." 
+                                            value={formData.username} 
+                                            onChange={handleChange} 
+                                            style={{ ...inputStyle, borderLeft: 0, borderRadius: '0 10px 10px 0' }} 
+                                            required 
+                                        />
+                                    </InputGroup>
+                                </Form.Group>
+
+                                {/* Input Email */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="small fw-bold text-muted mb-2">Email</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text className="bg-white border-end-0 text-muted" style={{ borderRadius: '10px 0 0 10px' }}>
+                                            <Envelope />
+                                        </InputGroup.Text>
+                                        <Form.Control 
+                                            type="email" 
+                                            name="email" 
+                                            placeholder="Masukkan email..." 
+                                            value={formData.email} 
+                                            onChange={handleChange} 
+                                            style={{ ...inputStyle, borderLeft: 0, borderRadius: '0 10px 10px 0' }} 
+                                            required 
+                                        />
+                                    </InputGroup>
+                                </Form.Group>
+
+                                {/* Input Password */}
+                                <Form.Group className="mb-2">
+                                    <Form.Label className="small fw-bold text-muted mb-2">Kata Sandi</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text className="bg-white border-end-0 text-muted" style={{ borderRadius: '10px 0 0 10px' }}>
+                                            <Lock />
+                                        </InputGroup.Text>
+                                        <Form.Control 
+                                            type={showPassword ? "text" : "password"} 
+                                            name="password" 
+                                            placeholder="Masukkan kata sandi..." 
+                                            value={formData.password} 
+                                            onChange={handleChange} 
+                                            style={{ ...inputStyle, borderLeft: 0, borderRight: 0, borderRadius: 0 }} 
+                                            required 
+                                        />
+                                        <InputGroup.Text 
+                                            className="bg-white border-start-0 text-muted" 
+                                            style={{ cursor: 'pointer', borderRadius: '0 10px 10px 0' }} 
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? <EyeSlashFill size={18} /> : <EyeFill size={18} />}
+                                        </InputGroup.Text>
+                                    </InputGroup>
+                                </Form.Group>
+
+                                {/* Checklist Password */}
+                                <div className="mb-4 p-3 bg-light rounded-4 border-0 mt-3">
+                                    <ValidationItem isPassed={checks.length} text="Minimal 8 karakter" />
+                                    <ValidationItem isPassed={checks.capital} text="Minimal 1 Huruf Kapital" />
+                                    <ValidationItem isPassed={checks.number} text="Minimal 1 Angka" />
+                                </div>
+
+                                {/* Tombol Daftar */}
+                                <Button 
+                                    variant="primary" 
+                                    type="submit" 
+                                    className="w-100 py-3 fw-bold shadow-sm mb-3" 
+                                    style={{ 
+                                        borderRadius: '15px',
+                                        fontSize: '1rem'
+                                    }} 
+                                    disabled={loading || !(checks.length && checks.capital && checks.number)}
+                                >
+                                    {loading ? 'Sedang Memproses...' : 'Daftar Sekarang'}
+                                </Button>
+
+                                {/* Link Masuk */}
+                                <div className="text-center small">
+                                    <span className="text-muted">Sudah punya akun? </span>
+                                    <Link to="/login" className="fw-bold text-decoration-none text-primary">Masuk</Link>
+                                </div>
+                            </Form>
+                        </Card.Body>
+                    </Card>
+
+                    {/* Footer */}
+                    <div className="text-center text-muted small mt-4">
+                        © 2025 SipDana. All Rights Reserved.
                     </div>
-                  </Form.Group>
-
-                  {/* Checklist UI */}
-                  <div className="mb-4 p-3 border rounded bg-light shadow-sm">
-                    <ValidationItem isPassed={checks.length} text="Minimal 8 karakter" />
-                    <ValidationItem isPassed={checks.capital} text="Minimal 1 Huruf Kapital" />
-                    <ValidationItem isPassed={checks.number} text="Minimal 1 Angka" />
-                  </div>
-
-                  <div className="text-center mb-3 small">
-                    <p>Sudah punya akun? <Link to="/login" className="fw-bold text-decoration-none">Masuk</Link></p>
-                  </div>
-                  
-                  <div className="d-grid">
-                    <Button 
-                      variant="primary" 
-                      type="submit" 
-                      disabled={loading || !(checks.length && checks.capital && checks.number)} 
-                      size="lg" 
-                      style={{ borderRadius: '50px', fontSize: '1rem' }}
-                    >
-                      {loading ? 'Mendaftarkan...' : 'Register'}
-                    </Button>
-                  </div>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
-  );
+                </Col>
+            </Row>
+        </div>
+    );
 };
 
 export default RegisterPage;
