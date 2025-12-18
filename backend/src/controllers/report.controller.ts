@@ -49,9 +49,9 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response) => 
             FROM transaksi t
             JOIN kategori k ON t.id_kategori = k.id_kategori
             WHERE t.id_user = ? ${clause}
-            ORDER BY t.created_at DESC
-            LIMIT 6
-            `,
+            ORDER BY t.tanggal DESC, t.created_at DESC 
+            LIMIT 10
+            `, // UBAH LIMIT DARI 6 MENJADI 10
             [userId, ...values]
         ); 
 
