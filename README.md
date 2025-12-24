@@ -1,5 +1,6 @@
 # Sip-Dana-v2
 <img width="1842" height="998" alt="image" src="https://github.com/user-attachments/assets/cb3d7f2d-531a-4034-be7e-8dc11c07648e" />
+
 # 🏦 SipDana: Smart Personal Finance Manager
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -99,6 +100,7 @@ DB_USER=root
 DB_PASS=
 DB_NAME=sip_dana
 JWT_SECRET=rahasia_sipdana_123
+```
 
 ### 3. Jalankan Aplikasi
 Buka dua terminal terpisah untuk menjalankan server dan client:
@@ -107,13 +109,14 @@ Buka dua terminal terpisah untuk menjalankan server dan client:
 ```bash
 cd backend
 npm install
-npm run dev```
+npm run dev
+```
 
 **Terminal 2 (Frontend):**
 ```bash
 cd frontend
 npm install
-npm run dev```
+npm run dev
 ```
 ---
 
