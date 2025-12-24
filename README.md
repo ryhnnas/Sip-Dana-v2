@@ -16,21 +16,21 @@
 ## ✨ Fitur Utama (End-to-End)
 
 1. **Sistem Autentikasi Ketat:**
-   - Registrasi dengan validasi password (Min. 8 karakter, Huruf Kapital, Angka).
-   - Login berbasis JWT (JSON Web Token) untuk keamanan sesi.
-2. **Dashboard Finansial:**
+   - Registrasi dengan validasi password (Min. 8 karakter, Huruf Kapital, Angka).
+   - Login berbasis JWT (JSON Web Token) untuk keamanan sesi.
+3. **Dashboard Finansial:**
    - Ringkasan saldo kumulatif, total pemasukan, dan pengeluaran bulan berjalan.
    - Grafik tren keuangan interaktif menggunakan Chart.js.
-3. **Manajemen Transaksi:**
+4. **Manajemen Transaksi:**
    - Pencatatan pemasukan dan pengeluaran dengan kategori yang spesifik.
    - Update saldo otomatis secara real-time menggunakan sistem *database transaction*.
-4. **Target Menabung (Saving Goals):**
+5. **Target Menabung (Saving Goals):**
    - Membuat target tabungan spesifik dengan tenggat waktu.
    - Alokasi saldo virtual ke target tertentu untuk memantau progres persentase.
-5. **Analisis Keuangan & Rekomendasi:**
+6. **Analisis Keuangan & Rekomendasi:**
    - Penghitungan Neto otomatis.
    - Rekomendasi metode pengelolaan keuangan (seperti *50/30/20 Rule* atau *Pay Yourself First*) berdasarkan kondisi keuangan user.
-6. **Pengaturan Akun:**
+7. **Pengaturan Akun:**
    - Update profil (Username & Email) serta perubahan kata sandi dengan validasi keamanan tinggi.
 
 ---
