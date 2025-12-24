@@ -30,12 +30,10 @@ export const updateProfile = async (req: AuthRequest<{}, {}, ProfileUpdateInput>
         return res.status(400).json({ message: 'Minimal satu field (username atau email) harus diisi.' });
     }
     
-    // Construct query dynamically
     let updates = [];
     let values = [];
 
     if (username) {
-        // Cek duplikasi username (kecuali milik sendiri)
         const [existingUser] = await pool.query<RowDataPacket[]>(
             'SELECT id_user FROM user WHERE username = ? AND id_user != ?',
             [username, userId]
@@ -47,7 +45,6 @@ export const updateProfile = async (req: AuthRequest<{}, {}, ProfileUpdateInput>
     }
     
     if (email) {
-        // Cek duplikasi email (kecuali milik sendiri)
         const [existingEmail] = await pool.query<RowDataPacket[]>(
             'SELECT id_user FROM user WHERE email = ? AND id_user != ?',
             [email, userId]
@@ -85,7 +82,6 @@ export const updatePassword = async (req: AuthRequest<{}, {}, PasswordUpdateInpu
     }
     
     try {
-        // 1. Ambil hash password lama
         const [rows] = await pool.query<RowDataPacket[]>(
             'SELECT password FROM user WHERE id_user = ?',
             [userId]
@@ -97,17 +93,14 @@ export const updatePassword = async (req: AuthRequest<{}, {}, PasswordUpdateInpu
 
         const hashedPassword = rows[0].password;
 
-        // 2. Bandingkan password lama
         const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Password lama salah.' });
         }
         
-        // 3. Hash password baru
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-        // 4. Update database
         await pool.query(
             'UPDATE user SET password = ? WHERE id_user = ?',
             [hashedNewPassword, userId]

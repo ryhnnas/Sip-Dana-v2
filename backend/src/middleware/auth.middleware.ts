@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { UserPayload } from '../types/auth.types'; 
 
-// Perluas tipe Request dari Express untuk menyimpan data pengguna yang terautentikasi
 export interface AuthRequest<P = {}, ResB = any, ReqB = any> extends Request<P, ResB, ReqB> {
     user?: UserPayload; 
 }
@@ -23,7 +22,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
             req.user = { 
                 id_user: decoded.id_user,
-                username: decoded.username || '', // tambahkan fallback string kosong
+                username: decoded.username || '',
                 email: decoded.email || '' 
             };
 

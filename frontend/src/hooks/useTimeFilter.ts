@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 type TimeUnit = 'mingguan' | 'bulan' | 'tahunan';
 
 const formatDate = (date: Date): string => date.toISOString().substring(0, 10);
-const formatMonth = (date: Date): string => date.toISOString().substring(0, 7); // YYYY-MM
+const formatMonth = (date: Date): string => date.toISOString().substring(0, 7); 
 const formatYear = (date: Date): string => date.getFullYear().toString();
 
 const addMonths = (date: Date, months: number): Date => {
@@ -54,12 +54,10 @@ export const useTimeFilter = (initialUnit: TimeUnit = 'bulan') => {
         setCurrentDate(new Date()); 
     }, []);
 
-    // Output yang digunakan untuk API dan tampilan
     const period = useMemo(() => {
         switch (unit) {
             case 'mingguan': {
                 const startOfWeek = new Date(currentDate);
-                // Atur ke hari Minggu (0) untuk awal minggu, jika locale ID
                 startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); 
                 const endOfWeek = addDays(startOfWeek, 6);
                 
@@ -77,7 +75,7 @@ export const useTimeFilter = (initialUnit: TimeUnit = 'bulan') => {
                     unit,
                     display: currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
                     apiParam: {
-                        month: formatMonth(currentDate), // YYYY-MM
+                        month: formatMonth(currentDate), 
                     }
                 };
             }

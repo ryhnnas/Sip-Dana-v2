@@ -29,7 +29,6 @@ export const createTarget = async (req: AuthRequest, res: Response) => {
     const { nama_target, target_jumlah, tanggal_target } = req.body;
 
     try {
-        // FIX: Ubah ke targetmenabung agar sinkron
         await pool.execute(
             'INSERT INTO targetmenabung (id_user, nama_target, target_jumlah, tanggal_target, jumlah_terkumpul, status) VALUES (?, ?, ?, ?, 0, "dalam_proses")',
             [userId, nama_target, target_jumlah, tanggal_target]
@@ -56,7 +55,6 @@ export const contributeToTarget = async (req: AuthRequest, res: Response) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Ambil Nama Target dan Cek Eksistensi Target
         const [targetRows] = await connection.query<RowDataPacket[]>(
             'SELECT nama_target FROM targetmenabung WHERE id_target = ? AND id_user = ?',
             [id_target, userId]
@@ -69,7 +67,6 @@ export const contributeToTarget = async (req: AuthRequest, res: Response) => {
 
         const namaTarget = targetRows[0].nama_target;
 
-        // 2. Cek Saldo Utama
         const [saldoRows] = await connection.query<RowDataPacket[]>(
             'SELECT saldo_sekarang FROM saldo WHERE id_user = ?',
             [userId]
@@ -81,30 +78,26 @@ export const contributeToTarget = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Saldo utama tidak mencukupi.' });
         }
 
-        // 3. Kurangi Saldo Utama
         await connection.execute(
             'UPDATE saldo SET saldo_sekarang = saldo_sekarang - ? WHERE id_user = ?',
             [jumlah, userId]
         );
 
-        // 4. Tambah jumlah_terkumpul ke Target
         await connection.execute(
             'UPDATE targetmenabung SET jumlah_terkumpul = jumlah_terkumpul + ? WHERE id_target = ? AND id_user = ?',
             [jumlah, id_target, userId]
         );
 
-        // 5. Catat ke riwayat transaksi menggunakan NAMA TARGET
         await connection.execute(
             `INSERT INTO transaksi (id_user, id_kategori, jenis, jumlah, keterangan, tanggal) VALUES 
             (?, (SELECT id_kategori FROM kategori WHERE nama_kategori = 'Tabungan' LIMIT 1), 'pengeluaran', ?, ?, NOW())`,
             [
                 userId, 
                 jumlah, 
-                `Kontribusi Target: ${namaTarget}` // Sekarang dinamis mengikuti nama target
+                `Kontribusi Target: ${namaTarget}` 
             ]
         );
 
-        // 6. Update Status ke tercapai jika sudah cukup
         await connection.execute(
             'UPDATE targetmenabung SET status = "tercapai" WHERE id_target = ? AND jumlah_terkumpul >= target_jumlah',
             [id_target]

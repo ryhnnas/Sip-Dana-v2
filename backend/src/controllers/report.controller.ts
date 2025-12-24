@@ -8,7 +8,7 @@ interface FilterParams {
     year?: string;  
     start_date?: string;
     end_date?: string;   
-    unit?: 'mingguan' | 'bulanan' | 'tahunan'; // Tambahan untuk grafik
+    unit?: 'mingguan' | 'bulanan' | 'tahunan'; 
 }
 
 const buildTimeFilter = (req: AuthRequest): { clause: string, values: (string | number)[] } => {
@@ -51,7 +51,7 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response) => 
             WHERE t.id_user = ? ${clause}
             ORDER BY t.tanggal DESC, t.created_at DESC 
             LIMIT 10
-            `, // UBAH LIMIT DARI 6 MENJADI 10
+            `, 
             [userId, ...values]
         ); 
 
@@ -115,15 +115,12 @@ export const getHistoricalData = async (req: AuthRequest, res: Response) => {
 
     const { unit } = req.query as FilterParams;
 
-    // Inisialisasi variabel dengan 'let' agar tidak error
     let groupBy = '';
-    let labelField = ''; // Variabel ini yang tadi menyebabkan error
+    let labelField = ''; 
     let limit = 6;
 
-    // LOGIKA PENENTUAN GRUP WAKTU
     switch (unit) {
         case 'mingguan':
-            // Grup berdasarkan nomor minggu, tapi label menampilkan Tanggal Senin (Awal Minggu)
             groupBy = 'YEARWEEK(tanggal, 1)';
             labelField = "DATE_FORMAT(DATE_SUB(tanggal, INTERVAL WEEKDAY(tanggal) DAY), '%d %b')";
             limit = 8;
@@ -223,7 +220,7 @@ export const getAnalysisReport = async (req: AuthRequest, res: Response) => {
              FROM rekomendasi r
              LEFT JOIN metodemengelola m ON r.id_metode = m.id_metode
              WHERE r.tipeRekomendasi = ?
-             ORDER BY RAND() LIMIT 1`, 
+             ORDER BY m.id_metode ASC LIMIT 1`, 
             [tipe]
         );
 

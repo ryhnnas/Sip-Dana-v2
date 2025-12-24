@@ -1,13 +1,12 @@
 import api from './api';
 import type * as ReportTypes from '../types/report.types';
 
-// Tambahkan 'unit' ke dalam interface FilterParams agar bisa kirim mingguan/bulanan/tahunan
 interface FilterParams {
     month?: string; 
     year?: string;  
     start_date?: string;
     end_date?: string;   
-    unit?: string; // Tambahkan ini
+    unit?: string; 
 }
 
 const getCurrentMonth = (): string => {

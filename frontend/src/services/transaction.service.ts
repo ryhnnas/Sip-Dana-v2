@@ -1,5 +1,5 @@
 import api from './api';
-import type { TransactionInput } from '../types/transaction.types'; // FIX: Menggunakan 'import type'
+import type { TransactionInput } from '../types/transaction.types';
 
 /**
  * Mencatat transaksi baru.

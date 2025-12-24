@@ -15,7 +15,6 @@ import { createTransaction } from '../services/transaction.service';
 import type { TransactionInput, Category, TransactionType } from '../types/transaction.types'; 
 import type { AxiosError } from 'axios'; 
 
-// --- DEFINISI YANG HILANG (WAJIB ADA) ---
 
 interface BackendErrorResponse {
     message: string;
@@ -43,7 +42,6 @@ const getErrorMessage = (err: unknown): string => {
     return 'Terjadi kesalahan jaringan atau server.';
 };
 
-// --- KOMPONEN UTAMA ---
 
 const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, onSuccess }) => {
     const [formData, setFormData] = useState(initialFormState);
@@ -52,7 +50,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, 
     const [catLoading, setCatLoading] = useState(true);
     const [message, setMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
-    // Style kustom untuk tampilan modern
     const inputStyle = {
         borderRadius: '12px',
         padding: '0.75rem 1rem',
@@ -158,7 +155,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ show, handleClose, 
                     )}
 
                     <Form onSubmit={handleSubmit}>
-                        {/* Tab Switcher */}
                         
                         <div className="d-flex p-1 bg-light rounded-4 mb-4" style={{ borderRadius: '15px' }}>
                             <button

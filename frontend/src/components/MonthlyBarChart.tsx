@@ -27,7 +27,6 @@ const options = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    // 1. Matikan Legend & Title bawaan (karena sudah ada di Card Header)
     legend: {
       display: false, 
     },
@@ -57,7 +56,7 @@ const options = {
   scales: {
     x: {
       grid: {
-        display: false, // Menghilangkan garis vertikal
+        display: false, 
       },
       ticks: {
         font: {
@@ -70,10 +69,10 @@ const options = {
     y: {
       beginAtZero: true,
       border: {
-        display: false, // Menghilangkan garis sumbu Y
+        display: false, 
       },
       grid: {
-        color: '#f1f5f9', // Warna grid horizontal sangat tipis
+        color: '#f1f5f9', 
       },
       ticks: {
         font: {
@@ -81,7 +80,6 @@ const options = {
         },
         color: '#94a3b8',
         callback: function(value: any) {
-          // Menampilkan format ringkas, misal 10.000 menjadi 10k atau tetap format IDR ringkas
           return new Intl.NumberFormat('id-ID', { 
               minimumFractionDigits: 0 
           }).format(value);
@@ -100,10 +98,8 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ chartData }) => {
       {
         label: 'Pemasukan',
         data: chartData.map(d => d.pemasukan),
-        // 2. Warna Solid sesuai gambar (Hijau)
         backgroundColor: '#28a745', 
         hoverBackgroundColor: '#218838',
-        // 3. Pill Shape (Membulat di atas)
         borderRadius: 10,
         borderSkipped: false as const,
         barPercentage: 0.6,
@@ -112,10 +108,8 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ chartData }) => {
       {
         label: 'Pengeluaran',
         data: chartData.map(d => d.pengeluaran),
-        // 2. Warna Solid sesuai gambar (Merah)
         backgroundColor: '#ff4d4d',
         hoverBackgroundColor: '#e60000',
-        // 3. Pill Shape
         borderRadius: 10,
         borderSkipped: false as const,
         barPercentage: 0.6,

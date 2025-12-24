@@ -1,11 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react'; // FIX: Menggunakan 'import type'
+import type { ReactNode } from 'react'; 
 import * as AuthTypes from '../types/auth.types';
 import { getCurrentUser, isAuthenticated, logoutUser } from '../services/auth.service';
 import { Spinner } from 'react-bootstrap'; 
 
-// --- EKSPOR INTERFACE TYPE ---
-// FIX: Ini diekspor agar bisa digunakan oleh file lain (meskipun kita tidak akan mengimpornya)
 export interface AuthContextType {
   user: AuthTypes.UserPayload | null;
   isLoggedIn: boolean;
@@ -14,7 +12,6 @@ export interface AuthContextType {
   isLoading: boolean;
 }
 
-// Inisialisasi Context Object
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -61,11 +58,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom Hook untuk mengakses Context (HARUS TETAP DI SINI)
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Pesan error asli: 'useAuth harus digunakan di dalam AuthProvider'
     throw new Error('useAuth harus digunakan di dalam AuthProvider');
   }
   return context;

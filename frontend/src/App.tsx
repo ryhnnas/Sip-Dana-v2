@@ -5,7 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import AnalisisPage from './pages/AnalisisPage'; 
 import TargetPage from './pages/TargetMenabungPage'; 
-import SettingsPage from './pages/SettingsPage'; // <-- Import Halaman Baru
+import SettingsPage from './pages/SettingsPage'; 
 import PrivateRoute from './routes/PrivateRoute'; 
 
 function App() {
@@ -22,7 +22,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/analisis" element={<AnalisisPage />} /> 
           <Route path="/target" element={<TargetPage />} />
-          <Route path="/settings" element={<SettingsPage />} /> {/* <-- Tambahkan Rute Settings */}
+          <Route path="/settings" element={<SettingsPage />} /> 
         </Route>
 
       </Routes>

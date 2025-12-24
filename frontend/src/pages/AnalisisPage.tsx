@@ -11,13 +11,12 @@ import TransactionModal from '../components/TransactionModal';
 import IllustrationNoData from '../assets/ilustrasi2.png';
 import IconAnalisisBiru from '../assets/IconAnalisisBiru.svg';
 import OnlyLogoBiru from '../assets/OnlyLogoBiru.svg';
-import IconBuku from '../assets/Buku.svg'; // Sesuaikan folder tempat Anda menyimpan file
-import IconLampu from '../assets/Lampu.svg'; // Sesuaikan jalur folder Anda
-import IconHurufI from '../assets/HurufIHijau.svg'; // Sesuaikan folder Anda
-import IconChecklist from '../assets/ChecklistHijau.svg'; // Sesuaikan folder Anda
+import IconBuku from '../assets/Buku.svg'; 
+import IconLampu from '../assets/Lampu.svg'; 
+import IconHurufI from '../assets/HurufIHijau.svg'; 
+import IconChecklist from '../assets/ChecklistHijau.svg'; 
 
 const AnalisisPage = () => {
-    // 1. SEMUA HOOKS HARUS DI PALING ATAS
     const { user } = useAuth();
     const { unit, period, navigate, changeUnit } = useTimeFilter('bulan'); 
     
@@ -38,7 +37,6 @@ const AnalisisPage = () => {
 
     
 
-    // 2. FUNGSI HELPER
     const formatRupiah = (amount: number) => {
         const formatted = new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -51,7 +49,6 @@ const AnalisisPage = () => {
 
     const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
-    // 3. LOGIKA FETCH DATA
     const loadAnalysisData = useCallback(async () => {
     setLoading(true);
     try {
@@ -66,7 +63,6 @@ const AnalisisPage = () => {
                 totalPengeluaran: analysisRes.summary.totalPengeluaran || 0,
                 neto: analysisRes.summary.neto || 0,
                 saldoAkhir: 0,
-                // Pastikan nama property ini SAMA dengan yang dikirim Backend
                 persentasePemasukan: analysisRes.summary.persentasePemasukan || 0,
                 persentasePengeluaran: analysisRes.summary.persentasePengeluaran || 0
             });
@@ -75,13 +71,13 @@ const AnalisisPage = () => {
         setReport(analysisRes);
         setHistoricalData(historical);
         
-        // Ambil data summary (termasuk persentase) dari hasil Analysis Report
+        // Ambil data summary dari hasil Analysis Report
         if (analysisRes.summary) {
             setSummaryData({
                 totalPemasukan: analysisRes.summary.totalPemasukan,
                 totalPengeluaran: analysisRes.summary.totalPengeluaran,
                 neto: analysisRes.summary.neto,
-                saldoAkhir: 0, // Analisis mungkin tidak butuh saldo akhir
+                saldoAkhir: 0,
                 persentasePemasukan: analysisRes.summary.persentasePemasukan || 0,
                 persentasePengeluaran: analysisRes.summary.persentasePengeluaran || 0
             });
@@ -98,7 +94,6 @@ const AnalisisPage = () => {
         loadAnalysisData();
     }, [loadAnalysisData]);
 
-    // 4. HANDLER
     const handleModalSuccess = () => {
         setShowModal(false);
         loadAnalysisData();
@@ -108,7 +103,6 @@ const AnalisisPage = () => {
         changeUnit(newUnit as 'mingguan' | 'bulan' | 'tahunan');
     };
 
-    // 5. LOGIKA KONDISIONAL RENDER (SETELAH HOOKS)
     if (loading) {
         return (
             <MainLayout onTransactionAdded={handleModalSuccess} openTransactionModal={() => setShowModal(true)}>
@@ -136,7 +130,6 @@ const AnalisisPage = () => {
     const topExpense = report?.topPengeluaran;
     const rec = report?.recommendation;
 
-    // 6. RENDER UTAMA
     return (
         <MainLayout onTransactionAdded={handleModalSuccess} openTransactionModal={() => setShowModal(true)}>
            <h2 className="mb-4 d-flex align-items-center text-primary fw-bold" style={{ fontSize: '35px' }}>
@@ -157,13 +150,11 @@ const AnalisisPage = () => {
             </h2>
 
            <div className="d-flex mb-4 align-items-center flex-wrap gap-3 justify-content-between">
-                {/* BAGIAN KIRI: Filter Pill */}
                 <div className="d-flex gap-2">
                     {['mingguan', 'bulan', 'tahunan'].map((u) => (
                         <Button 
                             key={u}
                             variant={unit === u ? 'primary' : 'outline-primary'} 
-                            // Pastikan fungsi handleFilterChange atau changeUnit menerima nilai 'bulan'
                             onClick={() => handleFilterChange(u as any)} 
                             className={`rounded-pill px-4 fw-bold border-2 ${unit !== u ? 'bg-white' : ''}`}
                             style={{ 
@@ -171,13 +162,11 @@ const AnalisisPage = () => {
                                 transition: 'all 0.3s ease'
                             }}
                         >
-                            {/* Tampilan label teks tetap bisa 'Bulanan' agar rapi di UI */}
                             {u === 'mingguan' ? 'Mingguan' : u === 'bulan' ? 'Bulanan' : 'Tahunan'}
                         </Button>
                     ))}
                 </div>
 
-                {/* BAGIAN KANAN: Navigasi Periode */}
                 <div className="d-flex align-items-center bg-white p-1 rounded-pill shadow-sm border">
                     <Button 
                         variant="link" 
@@ -244,11 +233,9 @@ const AnalisisPage = () => {
 
             <Card className="shadow-sm border-0 mb-5" style={{ borderRadius: '25px', overflow: 'hidden' }}>
                         <Card.Body className="p-4">
-                            {/* Header di dalam Card */}
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <h4 className="fw-bold text-muted mb-0" style={{ color: '#000' }}>Grafik Keuangan</h4>
-                                
-                                {/* Legend Kustom agar mirip dengan gambar */}
+
                                 <div className="d-flex gap-3 small fw-bold text-muted">
                                     <div className="d-flex align-items-center">
                                         <span className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#28a745', borderRadius: '50%', display: 'inline-block' }}></span>
@@ -261,7 +248,6 @@ const AnalisisPage = () => {
                                 </div>
                             </div>
 
-                            {/* Konten Grafik */}
                             <div style={{ minHeight: '300px' }}>
                                 {historicalData.length > 0 ? (
                                     <MonthlyBarChart chartData={historicalData} /> 
@@ -275,7 +261,6 @@ const AnalisisPage = () => {
                         </Card.Body>
                     </Card>
 
-            {/* LOGIKA PROTEKSI DATA: Hanya tampilkan jika total transaksi > 0 DAN data rekomendasi lengkap */}
         {(totalPemasukan === 0 && totalPengeluaran === 0) ? (
             <Card className="shadow-sm border-0 p-5 text-center mt-5" style={{ borderRadius: '20px', overflow: 'hidden' }}>
                 <img 
@@ -288,9 +273,9 @@ const AnalisisPage = () => {
                 <p className="small text-muted mb-0">Kami belum bisa memberikan Metode Mengelola Keuangan untuk periode <strong>{period.display}</strong> karena data kosong.</p>
             </Card>
             
-        ) : (rec && rec.namaMetode) ? ( // PERBAIKAN: Cek spesifik apakah namaMetode ada
+        ) : (rec && rec.namaMetode) ? ( 
             <>
-                {/* CARD 1: METODE MENGELOLA KEUANGAN */}
+                {/* METODE MENGELOLA KEUANGAN */}
                 <Card className="shadow-sm border-0 mb-4 overflow-hidden" style={{ borderRadius: '25px' }}>
                     <div className="bg-primary p-3 px-4 d-flex align-items-center text-white">
                         <img 
@@ -323,12 +308,12 @@ const AnalisisPage = () => {
                             </div>
                         </div>
                         <p className="text-secondary fw-medium mb-0" style={{ fontSize: '15px' }}>
-                            {rec.detailRekomendasi || rec.deskripsiMetode} {/* PERBAIKAN: Gunakan fallback jika salah satu kosong */}
+                            {rec.detailRekomendasi || rec.deskripsiMetode} 
                         </p>
                     </Card.Body>
                 </Card>
 
-                {/* CARD 2: CARA IMPLEMENTASI */}
+                {/* CARA IMPLEMENTASI */}
                 {rec.langkah_implementasi ? (
                     <Card className="shadow-sm border-0" style={{ borderRadius: '25px', backgroundColor: '#e9f7f1' }}>
                         <Card.Body className="p-4">
@@ -349,7 +334,6 @@ const AnalisisPage = () => {
                 ) : null}
             </>
         ) : (
-            /* Fallback jika ada data transaksi tapi algoritma tidak menemukan metode yang pas */
             <Card className="shadow-sm border-0 p-4 text-center">
                 <p className="text-muted small mb-0">
                     Sistem sedang memproses data untuk memberikan rekomendasi terbaik. <br/>

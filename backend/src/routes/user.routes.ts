@@ -4,9 +4,9 @@ import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.use(protect); // Lindungi semua endpoint user
+router.use(protect); 
 
-router.put('/profile', updateProfile); // PUT /api/users/profile
-router.put('/password', updatePassword); // PUT /api/users/password
+router.put('/profile', updateProfile);
+router.put('/password', updatePassword); 
 
 export default router;

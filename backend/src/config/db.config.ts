@@ -15,7 +15,7 @@ const dbConfig = {
     queueLimit: 0
 };
 
-// Buat pool koneksi (lebih efisien untuk aplikasi web)
+// Buat pool koneksi 
 const pool = mysql.createPool(dbConfig);
 
 // Fungsi untuk menguji koneksi database saat server berjalan

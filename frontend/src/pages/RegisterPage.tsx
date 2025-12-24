@@ -3,8 +3,8 @@ import { Container, Row, Col, Form, Button, Card, Alert, InputGroup } from 'reac
 import { Link, useNavigate } from 'react-router-dom';
 import { Envelope, Lock, Person, CheckCircleFill, XCircleFill, EyeFill, EyeSlashFill, ArrowLeft } from 'react-bootstrap-icons';
 
-// Import logo
 import LogoBiru from '../assets/Logo Biru.svg';
+import { registerUser } from '../services/auth.service';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -21,7 +21,6 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [validated, setValidated] = useState(false);
 
-    // Style input yang diseragamkan
     const inputStyle = {
         borderRadius: '10px',
         padding: '0.75rem 1rem',
@@ -65,13 +64,14 @@ const RegisterPage = () => {
         setLoading(true);
 
         try {
-            // Simulasi API call - ganti dengan registerUser(formData)
-            setTimeout(() => {
-                alert('Registrasi Berhasil! Silakan login.');
-                navigate('/login');
-            }, 1500);
+            const response = await registerUser(formData);
+
+            alert('Registrasi Berhasil! Silakan login.');
+            navigate('/login');
+            
         } catch (err) {
-            setError(err.response?.data?.message || 'Gagal registrasi.');
+            const errorBody = err as any;
+            setError(errorBody.response?.data?.message || 'Gagal registrasi. Silakan coba lagi.');
         } finally {
             setLoading(false);
         }
@@ -91,8 +91,7 @@ const RegisterPage = () => {
             overflow: 'hidden',
             position: 'relative'
         }} className="d-flex align-items-stretch">
-            
-            {/* Tombol Back - Paling Kiri Atas Halaman */}
+
             <div 
                 onClick={() => navigate('/')}
                 className="position-absolute shadow-sm d-flex align-items-center justify-content-center bg-white rounded-circle"
@@ -113,14 +112,12 @@ const RegisterPage = () => {
             </div>
 
             <Row className="w-100 m-0">
-                {/* SISI KIRI: BRANDING AREA */}
                 <Col md={6} lg={7} className="d-none d-md-flex flex-column justify-content-center align-items-start position-relative p-5" 
                     style={{ 
                         background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
                         position: 'relative'
                     }}>
                     
-                    {/* Decorative blur circles */}
                     <div style={{
                         position: 'absolute',
                         top: '10%',
@@ -142,7 +139,6 @@ const RegisterPage = () => {
                         filter: 'blur(100px)'
                     }}></div>
 
-                    {/* Konten Kiri Tengah */}
                     <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2, paddingLeft: '60px' }}>
                         <h1 className="text-white fw-bold mb-3" style={{ fontSize: '3rem' }}>Selamat Datang!</h1>
                         <h5 className="text-white opacity-75 fw-light mb-5">
@@ -151,10 +147,8 @@ const RegisterPage = () => {
                     </div>
                 </Col>
 
-                {/* SISI KANAN: FORM AREA */}
                 <Col md={6} lg={5} className="d-flex flex-column justify-content-center align-items-center p-4 bg-white position-relative">
-                    
-                    {/* Logo SipDana di Atas Card */}
+
                     <div className="text-center mb-4">
                         <img 
                             src={LogoBiru} 
@@ -180,7 +174,6 @@ const RegisterPage = () => {
                             )}
 
                             <Form noValidate validated={validated} onSubmit={handleSubmit}>
-                                {/* Input Nama */}
                                 <Form.Group className="mb-3">
                                     <Form.Label className="small fw-bold text-muted mb-2">Nama Pengguna</Form.Label>
                                     <InputGroup>
@@ -199,7 +192,6 @@ const RegisterPage = () => {
                                     </InputGroup>
                                 </Form.Group>
 
-                                {/* Input Email */}
                                 <Form.Group className="mb-3">
                                     <Form.Label className="small fw-bold text-muted mb-2">Email</Form.Label>
                                     <InputGroup>
@@ -218,7 +210,6 @@ const RegisterPage = () => {
                                     </InputGroup>
                                 </Form.Group>
 
-                                {/* Input Password */}
                                 <Form.Group className="mb-2">
                                     <Form.Label className="small fw-bold text-muted mb-2">Kata Sandi</Form.Label>
                                     <InputGroup>
@@ -244,14 +235,12 @@ const RegisterPage = () => {
                                     </InputGroup>
                                 </Form.Group>
 
-                                {/* Checklist Password */}
                                 <div className="mb-4 p-3 bg-light rounded-4 border-0 mt-3">
                                     <ValidationItem isPassed={checks.length} text="Minimal 8 karakter" />
                                     <ValidationItem isPassed={checks.capital} text="Minimal 1 Huruf Kapital" />
                                     <ValidationItem isPassed={checks.number} text="Minimal 1 Angka" />
                                 </div>
 
-                                {/* Tombol Daftar */}
                                 <Button 
                                     variant="primary" 
                                     type="submit" 
@@ -265,7 +254,6 @@ const RegisterPage = () => {
                                     {loading ? 'Sedang Memproses...' : 'Daftar Sekarang'}
                                 </Button>
 
-                                {/* Link Masuk */}
                                 <div className="text-center small">
                                     <span className="text-muted">Sudah punya akun? </span>
                                     <Link to="/login" className="fw-bold text-decoration-none text-primary">Masuk</Link>
@@ -274,7 +262,6 @@ const RegisterPage = () => {
                         </Card.Body>
                     </Card>
 
-                    {/* Footer */}
                     <div className="text-center text-muted small mt-4">
                         © 2025 SipDana. All Rights Reserved.
                     </div>

@@ -58,16 +58,15 @@ const Sidebar = () => {
       style={{ 
         height: '100vh', 
         backgroundColor: '#007bff', 
-        position: 'sticky', // UBAH INI dari 'relative' ke 'sticky'
-        top: 0,             // TAMBAH INI agar menempel di atas
-        left: 0,            // TAMBAH INI agar menempel di kiri
+        position: 'sticky', 
+        top: 0,             
+        left: 0,            
         padding: '20px 0 20px 0', 
-        overflowY: 'auto',  // TAMBAH INI jika menu sidebar sangat banyak, sidebar bisa di-scroll sendiri
+        overflowY: 'auto', 
       }}
       className="d-flex flex-column shadow" 
     >
       
-      {/* Logo Kustom */}
       <div className="d-flex align-items-center justify-content-center mb-5 mt-3">
         <img 
           src={LogoPutih} 
@@ -77,7 +76,6 @@ const Sidebar = () => {
         />
       </div>
       
-      {/* Menu Navigasi Utama */}
       <Nav className="flex-column flex-grow-1" style={{ padding: '0 20px' }}>
         {navItems.map(item => (
           <Nav.Link 
@@ -91,7 +89,6 @@ const Sidebar = () => {
             }}
           >
            <img 
-                // Pilih ikon Biru jika Aktif, atau ikon Putih jika Tidak Aktif
                 src={isActive(item.to) ? item.icon.active : item.icon.inactive} 
                 alt={`${item.label} Icon`} 
                 className="me-3" 
@@ -107,7 +104,6 @@ const Sidebar = () => {
         style={{ padding: '0 20px' }}
         className="mt-auto mb-3"
       >
-        {/* Item Pengaturan */}
         <Nav.Link 
             as={Link} 
             to={settingsItem.to} 
@@ -118,7 +114,6 @@ const Sidebar = () => {
                 transition: '0.3s',
             }}
           >
-            {/* Ikon Pengaturan Kustom */}
             <img 
                 src={isActive(settingsItem.to) ? settingsItem.icon.active : settingsItem.icon.inactive} 
                 alt={`${settingsItem.label} Icon`} 

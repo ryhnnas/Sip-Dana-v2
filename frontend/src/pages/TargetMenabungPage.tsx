@@ -25,7 +25,6 @@ const ContributeModal: React.FC<ContributeModalProps> = ({ show, handleClose, ta
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Style kustom seragam dengan TransactionModal
     const inputStyle = {
         borderRadius: '12px',
         padding: '0.75rem 1rem',
@@ -61,7 +60,6 @@ const ContributeModal: React.FC<ContributeModalProps> = ({ show, handleClose, ta
     return (
         <Modal show={show} onHide={handleClose} centered backdrop="static">
             <div className="bg-white shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden', border: 'none' }}>
-                {/* Header dengan Ikon Box sesuai TransactionModal */}
                 <Modal.Header closeButton className="border-0 pt-4 px-4 pb-0">
                     <Modal.Title className="fw-bold d-flex align-items-center">
                         <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
@@ -72,14 +70,12 @@ const ContributeModal: React.FC<ContributeModalProps> = ({ show, handleClose, ta
                 </Modal.Header>
 
                 <Modal.Body className="px-4 pb-4 pt-3">
-                    {/* Alert modern */}
                     {error && (
                         <Alert variant="danger" className="border-0 rounded-4 mb-4 small fw-medium">
                             {error}
                         </Alert>
                     )}
 
-                    {/* Info Target yang sedang dipilih */}
                     <div className="text-center mb-4 p-3 rounded-4" style={{ backgroundColor: '#f0f7ff', border: '1px dashed #0d6efd' }}>
                         <p className="small text-muted mb-1">Anda akan menabung untuk:</p>
                         <h5 className="fw-bold text-primary mb-0">{target?.nama_target}</h5>
@@ -126,7 +122,7 @@ const ContributeModal: React.FC<ContributeModalProps> = ({ show, handleClose, ta
     );
 };
 
-// --- MODAL TAMBAH TARGET (Disesuaikan UI) ---
+// MODAL TAMBAH TARGET
 interface TargetModalProps {
     show: boolean;
     handleClose: () => void;
@@ -134,7 +130,6 @@ interface TargetModalProps {
 }
 
 const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess }) => {
-    // State Awal
     const initialState = {
         nama_target: '',
         target_jumlah: '',
@@ -145,7 +140,6 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // RESET STATE SAAT MODAL DIBUKA/DITUTUP
     useEffect(() => {
         if (show) {
             setFormData(initialState);
@@ -184,8 +178,7 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
         setLoading(true);
         try {
             await createNewTarget({ ...formData, target_jumlah: numericTarget });
-            
-            // Penting: Reset data setelah sukses
+
             setFormData(initialState);
             
             onSuccess();
@@ -252,7 +245,7 @@ const TargetModal: React.FC<TargetModalProps> = ({ show, handleClose, onSuccess 
     );
 };
 
-// --- ITEM TARGET ---
+// ITEM TARGET
 const TargetItem: React.FC<{ target: TargetTypes.TargetMenabung, onContribute: (t: TargetTypes.TargetMenabung) => void }> = ({ target, onContribute }) => {
     const progress = Math.min(100, (target.jumlah_terkumpul / target.target_jumlah) * 100);
     const isAchieved = target.status === 'tercapai' || progress >= 100;
@@ -282,10 +275,8 @@ const TargetItem: React.FC<{ target: TargetTypes.TargetMenabung, onContribute: (
                 <p className="text-muted small mb-4">
                     Sampai: {new Date(target.tanggal_target).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
-                
-                {/* TATA LETAK VERTIKAL: Goal di atas, Terkumpul di bawah */}
+
     <div className="mb-3">
-        {/* Baris Goal (Lebih Kecil) */}
         <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="text-muted small fw-bold">Goal</span>
             <span className="fw-bold text-dark" style={{ fontSize: '14px' }}>
@@ -293,7 +284,6 @@ const TargetItem: React.FC<{ target: TargetTypes.TargetMenabung, onContribute: (
             </span>
         </div>
 
-        {/* Baris Terkumpul (Lebih Besar/Utama) */}
         <div className="d-flex flex-column mt-3">
             <span className="text-muted small fw-bold mb-1">Terkumpul</span>
             <h3 className="fw-bold text-success mb-0" style={{ letterSpacing: '-0.5px' }}>
@@ -335,7 +325,7 @@ const TargetItem: React.FC<{ target: TargetTypes.TargetMenabung, onContribute: (
     );
 };
 
-// --- HALAMAN UTAMA (FINAL UI SINKRONISASI) ---
+// HALAMAN UTAMA
 const TargetMenabungPage = () => {
     const [targets, setTargets] = useState<TargetTypes.TargetMenabung[]>([]);
     const [summary, setSummary] = useState<ReportTypes.MonthlySummary | null>(null); 
@@ -381,7 +371,6 @@ const TargetMenabungPage = () => {
             onTransactionAdded={loadTargets} 
             openTransactionModal={() => setShowTransactionModal(true)}
         >
-            {/* Header Halaman Sesuai Dashboard */}
             <h2 className="mb-4 d-flex align-items-center text-primary fw-bold" style={{ fontSize: '35px' }}>
                 <img 
                     src={IconTargetBiru} 
@@ -400,7 +389,6 @@ const TargetMenabungPage = () => {
                 <Alert variant="danger" style={{ borderRadius: '15px' }}>{error}</Alert>
             ) : (
                 <>
-                    {/* Ringkasan Saldo Sesuai Dashboard */}
                     <Row className="mb-4">
                         <Col md={6} className="mb-3">
                             <Card className="shadow-sm border-0 h-100 p-4" style={{ borderRadius: '20px' }}>
@@ -426,7 +414,7 @@ const TargetMenabungPage = () => {
                                 className="shadow-sm border-0 h-100 p-4 text-white" 
                                 style={{ 
                                     borderRadius: '20px',
-                                    background: '#198754 0%' // Gradien Hijau
+                                    background: '#198754 0%' 
                                 }}
                             >
                                 <h5 className="fw-bold opacity-85">Saran Menabung (20%)</h5>
@@ -438,7 +426,6 @@ const TargetMenabungPage = () => {
                         </Col>
                     </Row>
 
-                    {/* Tombol Utama Sesuai Dashboard (Full Width) */}
                     <div className="d-grid mb-5">
                         <Button 
                             variant="primary" 
@@ -451,27 +438,24 @@ const TargetMenabungPage = () => {
                         </Button>
                     </div>
                     
-{/* Judul Daftar Target dengan Line Selebar Tombol */}
-<div className="text-center my-5 px-1">
-    <h2 className="fw-bold text-dark mb-2" style={{ letterSpacing: '-0.5px' }}>
-        Daftar Target
-    </h2>
-    <p className="text-muted small mb-4">Kelola dan pantau kemajuan tabungan Anda</p>
-    
-    {/* Garis Dekoratif yang Panjangnya Mengikuti Kontainer (Simetris dengan Tombol) */}
-    <div 
-        className="mx-auto"
-        style={{ 
-            width: '100%',            // Menyamakan lebar dengan d-grid button
-            height: '2px',            // Tipis agar elegan
-            background: 'linear-gradient(to right, rgba(13, 110, 253, 0), rgba(13, 110, 253, 0.4), rgba(13, 110, 253, 0))', 
-            borderRadius: '10px'
-        }}
-    ></div>
-</div>
+                    <div className="text-center my-5 px-1">
+                        <h2 className="fw-bold text-dark mb-2" style={{ letterSpacing: '-0.5px' }}>
+                            Daftar Target
+                        </h2>
+                        <p className="text-muted small mb-4">Kelola dan pantau kemajuan tabungan Anda</p>
+                        
+                        <div 
+                            className="mx-auto"
+                            style={{ 
+                                width: '100%',           
+                                height: '2px',            
+                                background: 'linear-gradient(to right, rgba(13, 110, 253, 0), rgba(13, 110, 253, 0.4), rgba(13, 110, 253, 0))', 
+                                borderRadius: '10px'
+                            }}
+                        ></div>
+                    </div>
 
                     {targets.length === 0 ? (
-                        /* Tampilan Jika TIDAK ADA DATA TARGET */
                         <Card 
                             className="shadow-sm border-0 p-5 text-center mt-2" 
                             style={{ borderRadius: '25px', overflow: 'hidden' }}
@@ -480,7 +464,7 @@ const TargetMenabungPage = () => {
                                 src={OnlyLogoBiru} 
                                 alt="Logo SipDana" 
                                 className="img-fluid mb-4 mx-auto"
-                                style={{ maxWidth: '300px' }} // Sedikit diperkecil agar proporsional di halaman target
+                                style={{ maxWidth: '300px' }} 
                             />
                             <h4 className="fw-bold text-secondary">Belum Ada Target Aktif</h4>
                             <p className="text-muted mb-4">
@@ -491,7 +475,6 @@ const TargetMenabungPage = () => {
                             </div>
                         </Card>
                     ) : (
-                        /* Tampilan Jika ADA DATA TARGET */
                         <Row className="g-4">
                             {targets.map(target => (
                                 <Col md={6} lg={4} key={target.id_target}>

@@ -1,7 +1,7 @@
 export interface TargetInput {
     nama_target: string;
     target_jumlah: number;
-    tanggal_target: string; // Format YYYY-MM-DD
+    tanggal_target: string; 
 }
 
 export interface TargetMenabung extends TargetInput {

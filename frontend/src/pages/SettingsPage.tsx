@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
 import { PersonFill, KeyFill, CheckCircleFill, BoxArrowRight, XCircleFill } from 'react-bootstrap-icons';
@@ -12,13 +12,18 @@ const SettingsPage = () => {
     const { user, setUser, handleLogout } = useAuth();
     const [showModal, setShowModal] = useState(false);
     
-    // Style kustom seragam dengan halaman lain
     const inputStyle = {
         borderRadius: '12px',
         padding: '0.75rem 1rem',
         border: '1px solid #e2e8f0',
         backgroundColor: '#f8fafc',
     };
+
+    // State Password
+    const [passwordData, setPasswordData] = useState<AuthTypes.PasswordUpdateInput>({
+        currentPassword: '',
+        newPassword: '',
+    });
 
     // State Profil
     const [profileData, setProfileData] = useState<AuthTypes.ProfileUpdateInput>({
@@ -28,11 +33,21 @@ const SettingsPage = () => {
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
-    // State Password
-    const [passwordData, setPasswordData] = useState<AuthTypes.PasswordUpdateInput>({
-        currentPassword: '',
-        newPassword: '',
-    });
+    const [checks, setChecks] = useState({ length: false, capital: false, number: false });
+    useEffect(() => {
+        setChecks({
+            length: passwordData.newPassword.length >= 8,
+            capital: /[A-Z]/.test(passwordData.newPassword),
+            number: /\d/.test(passwordData.newPassword)
+        });
+    }, [passwordData.newPassword]);
+    const ValidationItem = ({ isPassed, text }: { isPassed: boolean, text: string }) => (
+        <div className={`d-flex align-items-center mb-1 ${isPassed ? 'text-success' : 'text-muted'}`} style={{ fontSize: '0.75rem' }}>
+            {isPassed ? <CheckCircleFill className="me-2" size={14} /> : <XCircleFill className="me-2" size={14} style={{ opacity: 0.3 }} />}
+            <span>{text}</span>
+        </div>
+    );
+    
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
@@ -71,6 +86,15 @@ const SettingsPage = () => {
     
     const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!(checks.length && checks.capital && checks.number)) {
+            setPasswordMessage({ 
+                type: 'danger', 
+                text: 'Password baru belum memenuhi syarat keamanan.' 
+            });
+            return;
+        }
+
         if (passwordData.newPassword.length < 6) {
              setPasswordMessage({ type: 'danger', text: 'Password baru minimal 6 karakter.' });
              return;
@@ -92,7 +116,6 @@ const SettingsPage = () => {
             onTransactionAdded={handleModalSuccess} 
             openTransactionModal={() => setShowModal(true)}
         >
-            {/* Header Halaman */}
             <h2 className="mb-4 d-flex align-items-center text-primary fw-bold" style={{ fontSize: '35px' }}>
                 <img 
                     src={IconPengaturanBiru} 
@@ -104,7 +127,6 @@ const SettingsPage = () => {
             </h2>
 
             <Row>
-                {/* 1. Detail Profil */}
                 <Col lg={6} className="mb-4">
                     <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '25px' }}>
                         <Card.Body className="p-4">
@@ -145,7 +167,6 @@ const SettingsPage = () => {
                     </Card>
                 </Col>
 
-                {/* 2. Ubah Password */}
                 <Col lg={6} className="mb-4">
                     <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '25px' }}>
                         <Card.Body className="p-4">
@@ -171,14 +192,29 @@ const SettingsPage = () => {
                                         value={passwordData.currentPassword} onChange={handlePasswordChange} required
                                     />
                                 </Form.Group>
-                                <Form.Group className="mb-4">
+                                <Form.Group className="mb-2"> 
                                     <Form.Label className="fw-semibold small text-muted">Kata Sandi Baru</Form.Label>
                                     <Form.Control
-                                        type="password" name="newPassword" style={inputStyle}
-                                        value={passwordData.newPassword} onChange={handlePasswordChange} required
+                                        type="password" 
+                                        name="newPassword" 
+                                        style={inputStyle}
+                                        value={passwordData.newPassword} 
+                                        onChange={handlePasswordChange} 
+                                        required
                                     />
                                 </Form.Group>
-                                <Button variant="outline-danger" type="submit" className="w-100 py-3 fw-bold" style={{ borderRadius: '15px' }} disabled={passwordLoading}>
+                                <div className="mb-4 p-3 bg-light rounded-4 border-0">
+                                    <ValidationItem isPassed={checks.length} text="Minimal 8 karakter" />
+                                    <ValidationItem isPassed={checks.capital} text="Minimal 1 Huruf Kapital" />
+                                    <ValidationItem isPassed={checks.number} text="Minimal 1 Angka" />
+                                </div>
+                                <Button 
+                                    variant="outline-danger" 
+                                    type="submit" 
+                                    className="w-100 py-3 fw-bold" 
+                                    style={{ borderRadius: '15px' }} 
+                                    disabled={passwordLoading || !(checks.length && checks.capital && checks.number)} 
+                                >
                                     {passwordLoading ? <Spinner size="sm" /> : 'Ubah Kata Sandi'}
                                 </Button>
                             </Form>
@@ -186,7 +222,6 @@ const SettingsPage = () => {
                     </Card>
                 </Col>
 
-                {/* 3. Keluar Akun */}
                 <Col lg={12} className="mb-4">
                     <Card className="shadow-sm border-0" style={{ borderRadius: '25px', backgroundColor: '#fff5f5' }}>
                         <Card.Body className="p-4 d-md-flex align-items-center justify-content-between">

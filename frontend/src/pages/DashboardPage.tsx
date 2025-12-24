@@ -23,7 +23,7 @@ const DashboardPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false); 
-    const [showSaldo, setShowSaldo] = useState(true); // Default saldo terlihat
+    const [showSaldo, setShowSaldo] = useState(true); 
 
     
     
@@ -123,7 +123,7 @@ const DashboardPage = () => {
         <MainLayout 
             onTransactionAdded={handleModalSuccess} 
             openTransactionModal={() => setShowModal(true)}
-            hideAddButton={true} // TAMBAHKAN PROP INI untuk hide button di TransactionHistory
+            hideAddButton={true}
         >
             
            <h2 className="mb-4 d-flex align-items-center text-primary fw-bold" style={{ fontSize: '35px' }}>
@@ -132,10 +132,10 @@ const DashboardPage = () => {
                     alt="Ikon Beranda" 
                     className="me-2" 
                     style={{ 
-                        width: '32px', // Ukuran ikon sedikit diperbesar agar seimbang dengan font bold
+                        width: '32px', 
                         height: '32px',
                         display: 'block',
-                        marginTop: '-1px' // Menarik ikon sedikit ke atas jika teks terasa terlalu bawah
+                        marginTop: '-1px' 
                     }} 
                 /> 
                 <span style={{ display: 'inline-block', lineHeight: '1.2' }}>
@@ -145,19 +145,16 @@ const DashboardPage = () => {
             
             {hasData ? (
                 <>
-                    {/* Baris Atas: Saldo & Notifikasi */}
+                    {/* Saldo & Notifikasi */}
                     <Row className="mb-4">
-                        {/* 1. Kotak Saldo Saat Ini / Tabungan */}
                         <Col md={6} className="mb-3">
                             <Card className="shadow-sm border-0 h-100 p-4" style={{ borderRadius: '20px' }}>
                                 <h5 className="fw-bold text-muted">Total Saldo Saat Ini</h5>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    {/* Logika Tampilan Saldo */}
                                     <h3 className="fw-bold text-primary mb-0">
                                         {showSaldo ? formatRupiah(totalSaldo) : "Rp ••••••"}
                                     </h3>
                                     
-                                    {/* Toggle Icon Mata */}
                                     <div 
                                         onClick={() => setShowSaldo(!showSaldo)} 
                                         style={{ cursor: 'pointer' }}
@@ -175,13 +172,11 @@ const DashboardPage = () => {
                                     {totalSelisih < 0 && <ArrowDown size={16} className="me-1" />}
                                     {totalSelisih === 0 && <span className="me-1">—</span>} 
                                     
-                                    {/* Neto juga disembunyikan jika showSaldo false */}
                                     {showSaldo ? formatRupiah(Math.abs(totalSelisih)) : "Rp •••"} Neto Bulan Ini
                                 </p>
                             </Card>
                         </Col>
                         
-                        {/* 2. Notifikasi Dinamis */}
                         <Col md={6} className="mb-3">
                             <Card className="shadow-sm border-0 h-100 border-start border-warning border-4" style={{ backgroundColor: '#fffbe6', borderRadius: '20px' }}>
                                 <Card.Body>
@@ -190,13 +185,10 @@ const DashboardPage = () => {
                                     </h5>
                                     <p className="fw-bold mb-1">Halo, {user?.username}!</p>
                                     
-                                    {/* Status dengan warna dinamis */}
                                     <p className="small mb-1">
                                         Saldo Anda saat ini <span className={`fw-bold text-${statusInfo.color}`}>{statusInfo.label}</span>.
                                     </p>
-                                    {/* Garis Pemisah Tipis */}
                                     <hr className="my-2 opacity-25" />
-                                    {/* Pesan saran dinamis */}
                                     <p className="text-dark small mb-2">
                                         {statusInfo.advice}
                                     </p>
@@ -205,7 +197,6 @@ const DashboardPage = () => {
                         </Col>
                     </Row>
 
-                    {/* Tombol Tambah Transaksi (Full-width) - TETAP DI DASHBOARD */}
                     <div className="d-grid mb-5">
                         <Button 
                             variant="primary" 
@@ -225,14 +216,11 @@ const DashboardPage = () => {
                     </div>
                     
                     
-                    {/* Area Analisis Keuangan (Grafik Bar Chart) */}
                     <Card className="shadow-sm border-0 mb-5" style={{ borderRadius: '25px', overflow: 'hidden' }}>
                         <Card.Body className="p-4">
-                            {/* Header di dalam Card */}
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <h4 className="fw-bold text-muted mb-0" style={{ color: '#000' }}>Grafik Keuangan Bulanan</h4>
                                 
-                                {/* Legend Kustom agar mirip dengan gambar */}
                                 <div className="d-flex gap-3 small fw-bold text-muted">
                                     <div className="d-flex align-items-center">
                                         <span className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#28a745', borderRadius: '50%', display: 'inline-block' }}></span>
@@ -245,7 +233,6 @@ const DashboardPage = () => {
                                 </div>
                             </div>
 
-                            {/* Konten Grafik */}
                             <div style={{ minHeight: '300px' }}>
                                 {historicalData.length > 0 ? (
                                     <MonthlyBarChart chartData={historicalData} /> 
@@ -260,7 +247,6 @@ const DashboardPage = () => {
                     </Card>
                 </>
             ) : (
-                /* Tampilan Jika TIDAK ADA DATA */
                 <Card className="shadow-sm border-0 p-5 text-center mt-5" style={{ borderRadius: '20px', overflow: 'hidden' }}>
                     <img 
                         src={OnlyLogoBiru} 
@@ -289,7 +275,6 @@ const DashboardPage = () => {
                 </Card>
             )}
 
-            {/* Modal Transaksi */}
             <TransactionModal 
                 show={showModal} 
                 handleClose={() => setShowModal(false)} 

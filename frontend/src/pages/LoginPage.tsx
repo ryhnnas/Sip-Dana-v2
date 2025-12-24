@@ -21,7 +21,6 @@ const LoginPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [validated, setValidated] = useState(false);
 
-  // Style input yang diseragamkan
   const inputStyle = {
     borderRadius: '10px',
     padding: '0.75rem 1rem',
@@ -73,7 +72,6 @@ const LoginPage = () => {
       position: 'relative'
     }} className="d-flex align-items-stretch">
       
-      {/* Tombol Back - Paling Kiri Atas Halaman */}
       <div 
         onClick={() => navigate('/')}
         className="position-absolute shadow-sm d-flex align-items-center justify-content-center bg-white rounded-circle"
@@ -94,14 +92,12 @@ const LoginPage = () => {
       </div>
 
       <Row className="w-100 m-0">
-        {/* SISI KIRI: BRANDING AREA */}
         <Col md={6} lg={7} className="d-none d-md-flex flex-column justify-content-center align-items-start position-relative p-5" 
           style={{ 
             background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
             position: 'relative'
           }}>
           
-          {/* Decorative blur circles */}
           <div style={{
             position: 'absolute',
             top: '10%',
@@ -123,7 +119,6 @@ const LoginPage = () => {
             filter: 'blur(100px)'
           }}></div>
 
-          {/* Konten Kiri Tengah */}
           <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2, paddingLeft: '60px' }}>
             <h1 className="text-white fw-bold mb-3" style={{ fontSize: '3rem' }}>Selamat Datang Kembali!</h1>
             <h5 className="text-white opacity-75 fw-light mb-5">
@@ -132,10 +127,8 @@ const LoginPage = () => {
           </div>
         </Col>
 
-        {/* SISI KANAN: FORM AREA */}
         <Col md={6} lg={5} className="d-flex flex-column justify-content-center align-items-center p-4 bg-white position-relative">
           
-          {/* Logo SipDana di Atas Card */}
           <div className="text-center mb-4">
             <img 
               src={LogoBiru} 
@@ -161,7 +154,6 @@ const LoginPage = () => {
               )}
 
               <Form noValidate validated={validated} onSubmit={handleSubmit}>
-                {/* Input Email */}
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold text-muted mb-2">Email</Form.Label>
                   <InputGroup>
@@ -180,7 +172,6 @@ const LoginPage = () => {
                   </InputGroup>
                 </Form.Group>
 
-                {/* Input Password */}
                 <Form.Group className="mb-4">
                   <Form.Label className="small fw-bold text-muted mb-2">Kata Sandi</Form.Label>
                   <InputGroup>
@@ -206,7 +197,6 @@ const LoginPage = () => {
                   </InputGroup>
                 </Form.Group>
 
-                {/* Tombol Masuk */}
                 <Button 
                   variant="primary" 
                   type="submit" 
@@ -220,7 +210,6 @@ const LoginPage = () => {
                   {loading ? 'Sedang Memproses...' : 'Masuk'}
                 </Button>
 
-                {/* Link Daftar */}
                 <div className="text-center small">
                   <span className="text-muted">Belum punya akun? </span>
                   <Link to="/register" className="fw-bold text-decoration-none text-primary">Daftar</Link>
@@ -229,7 +218,6 @@ const LoginPage = () => {
             </Card.Body>
           </Card>
 
-          {/* Footer */}
           <div className="text-center text-muted small mt-4">
             © 2025 SipDana. All Rights Reserved.
           </div>

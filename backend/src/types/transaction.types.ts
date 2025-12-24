@@ -5,7 +5,7 @@ export type TransactionType = 'pemasukan' | 'pengeluaran';
 // Interface untuk data transaksi yang diterima dari request body
 export interface TransactionInput {
     id_kategori: number;
-    tanggal: string; // Akan diproses sebagai DATE MySQL
+    tanggal: string; 
     jumlah: number;
     jenis: TransactionType;
     keterangan?: string;

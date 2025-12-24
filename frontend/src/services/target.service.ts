@@ -1,5 +1,4 @@
 import api from './api';
-// FIX: Menggunakan Namespace Import
 import * as TargetTypes from '../types/target.types'; 
 
 /**

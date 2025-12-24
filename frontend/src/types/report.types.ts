@@ -11,8 +11,8 @@ export interface TransactionHistoryItem { // <-- TIPE DATA BARU
     jenis: 'pemasukan' | 'pengeluaran';
     jumlah: number;
     keterangan: string;
-    tanggal: string; // YYYY-MM-DD
-    created_at: string; // Timestamp
+    tanggal: string; 
+    created_at: string; 
     nama_kategori: string;
 }
 

@@ -24,15 +24,14 @@ app.use(cors({
 }));
 app.use(express.json()); 
 
-// --- Gunakan Routes ---
+// Gunakan Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes); 
 app.use('/api/utilities', utilityRoutes);   
 app.use('/api/reports', reportRoutes);      
 app.use('/api/users', userRoutes); 
-app.use('/api/targets', targetRoutes); // <-- FIX: Daftarkan Target Routes di sini!
+app.use('/api/targets', targetRoutes); 
 
-// Cek koneksi database dan jalankan server
 const startServer = async () => {
     try {
         await pool.query('SELECT 1');

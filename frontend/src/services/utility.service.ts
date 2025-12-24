@@ -1,5 +1,5 @@
 import api from './api';
-import type { Category } from '../types/transaction.types'; // FIX: Menggunakan 'import type'
+import type { Category } from '../types/transaction.types';
 
 /**
  * Mengambil daftar semua kategori yang tersedia.

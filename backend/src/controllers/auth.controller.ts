@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 import { UserInput, UserPayload } from '../types/auth.types';
 import { RowDataPacket } from 'mysql2';
 
-// Pastikan secret key ada
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 if (JWT_SECRET === 'fallback_secret') {
     console.warn('⚠️ Peringatan: JWT_SECRET belum diatur di .env!');
@@ -17,7 +16,6 @@ if (JWT_SECRET === 'fallback_secret') {
 export const register = async (req: Request<{}, {}, UserInput>, res: Response) => {
     const { username, email, password } = req.body;
 
-    // 1. Validasi input dasar
     if (!username || !email || !password) {
         return res.status(400).json({ message: 'Semua field (username, email, password) harus diisi.' });
     }
@@ -29,7 +27,6 @@ export const register = async (req: Request<{}, {}, UserInput>, res: Response) =
         });
     }
 
-    // 2. Validasi Keamanan Password (Server-side Guard)
     const hasLength = password.length >= 8;
     const hasCapital = /[A-Z]/.test(password);
     const hasNumber = /\d/.test(password);
@@ -46,7 +43,6 @@ export const register = async (req: Request<{}, {}, UserInput>, res: Response) =
     }
 
     try {
-        // 3. Cek apakah email atau username sudah terdaftar
         const [existingUser] = await pool.query<RowDataPacket[]>(
             'SELECT id_user FROM user WHERE email = ? OR username = ?',
             [email, username]
@@ -56,17 +52,14 @@ export const register = async (req: Request<{}, {}, UserInput>, res: Response) =
             return res.status(409).json({ message: 'Email atau Username sudah terdaftar.' });
         }
 
-        // 4. Hash Password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 5. Simpan pengguna baru
         await pool.execute(
             'INSERT INTO user (username, email, password) VALUES (?, ?, ?)',
             [username, email, hashedPassword]
         );
         
-        // 6. Respon Sukses (Tanpa Token sesuai request agar user login manual)
         return res.status(201).json({
             message: 'Registrasi berhasil. Akun telah dibuat, silakan login untuk melanjutkan.',
         });
@@ -88,7 +81,6 @@ export const login = async (req: Request<{}, {}, Pick<UserInput, 'email' | 'pass
     }
 
     try {
-        // 1. Cari pengguna berdasarkan email
         const [rows] = await pool.query<RowDataPacket[]>(
             'SELECT id_user, username, email, password FROM user WHERE email = ?',
             [email]
@@ -100,14 +92,12 @@ export const login = async (req: Request<{}, {}, Pick<UserInput, 'email' | 'pass
             return res.status(401).json({ message: 'Email atau Password salah.' });
         }
 
-        // 2. Bandingkan Password
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Email atau Password salah.' });
         }
         
-        // 3. Buat Payload dan Token JWT
         const payload: UserPayload = { id_user: user.id_user, username: user.username, email: user.email };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 
